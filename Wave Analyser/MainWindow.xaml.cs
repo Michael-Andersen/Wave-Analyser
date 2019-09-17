@@ -20,33 +20,42 @@ namespace Wave_Analyser
 	/// </summary>
 	public partial class MainWindow : Window
 	{
+        int sampleRate = 44100;
+        int zoom = 2;
+
 		public MainWindow()
 		{
 			InitializeComponent();
-			Random r = new Random();
-			//Mock random sample data of 10 secs worth of 44100 samples/sec 
-			int[] points = new int[44100 * 10];
+            Random r = new Random();
+
+			//Mock random sample data
+			int[] points = new int[sampleRate * 1];
+
 			for (int i = 0; i < points.Length; i++)
 			{
 				points[i] = r.Next(0, (int)timeDomainCanvas.Height);
 			}
-			drawGraph(points, 10);
+
+            int timeDomainWidth = sampleRate * zoom;
+            timeDomainCanvas.Width = timeDomainWidth;
+
+			DrawGraph(points, 1);
 		}
 
-		//uses lines between sample points to draw graph, uses spaces variable to determine which of
-		//the points to plot ie. plot every 10th point
-		private void drawGraph(int[] points, int spaces)
+        //uses lines between sample points to draw graph, uses spaces variable to determine which of
+        //the points to plot ie. plot every 10th point
+        private void DrawGraph(int[] points, int spaces)
 		{
 			for (int i = 0; i < points.Length - spaces; i += spaces)
 			{
-				Line segement = new Line();
-				segement.Stroke = System.Windows.Media.Brushes.LightSteelBlue;
-				segement.X1 = i * spaces * timeDomainCanvas.Width / points.Length;
-				segement.X2 = (i + 1) * spaces * timeDomainCanvas.Width / points.Length;
-				segement.Y1 = points[i];
-				segement.Y2 = points[i + spaces];
-				segement.StrokeThickness = 2;
-				timeDomainCanvas.Children.Add(segement);
+				Line segment = new Line();
+				segment.Stroke = System.Windows.Media.Brushes.LightSteelBlue;
+                segment.X1 = i * spaces * zoom;
+                segment.X2 = (i + 1) * spaces * zoom;
+                segment.Y1 = points[i];
+                segment.Y2 = points[i + spaces];
+                segment.StrokeThickness = 2;
+				timeDomainCanvas.Children.Add(segment);
 			}
 		}
 	}

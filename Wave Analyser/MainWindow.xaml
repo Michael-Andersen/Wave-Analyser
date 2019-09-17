@@ -6,8 +6,12 @@
         xmlns:local="clr-namespace:Wave_Analyser"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Canvas x:Name="timeDomainCanvas" HorizontalAlignment="Left" Height="155" VerticalAlignment="Top" Width="782"/>
-
-    </Grid>
+    <StackPanel>
+        <Menu Background="#eee">
+            <MenuItem Header="File"/>
+        </Menu>
+        <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
+            <Canvas x:Name="timeDomainCanvas" Background="#ddd" ClipToBounds="True" Height="100"/>
+        </ScrollViewer>
+    </StackPanel>
 </Window>
