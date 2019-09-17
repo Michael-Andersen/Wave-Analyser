@@ -30,6 +30,7 @@ namespace Wave_Analyser
 			{
 				points[i] = r.Next(0, (int)timeDomainCanvas.Height);
 			}
+			zoom2(timeDomainCanvas, 1.1);
 			drawGraph(points, 10);
 		}
 
@@ -48,6 +49,24 @@ namespace Wave_Analyser
 				segement.StrokeThickness = 2;
 				timeDomainCanvas.Children.Add(segement);
 			}
+		}
+
+		//rename to zoom 
+		private void zoom2(Canvas canvas, double xfactor)
+		{
+			ScaleTransform st = new ScaleTransform();
+			canvas.RenderTransform = st;
+			canvas.MouseWheel += (sender, e) =>
+			{
+				if (e.Delta > 0)
+				{
+					st.ScaleX *= xfactor;
+				}
+				else
+				{
+					st.ScaleX /= xfactor;
+				}
+			};
 		}
 	}
 }
