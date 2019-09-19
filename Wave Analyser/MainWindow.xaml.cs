@@ -20,43 +20,17 @@ namespace Wave_Analyser
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-        int sampleRate = 44100;
-        int zoom = 2;
+        public readonly double SAMPLE_RATE = 41000.0;
+        public readonly int BIT_DEPTH = 16;
 
 		public MainWindow()
 		{
 			InitializeComponent();
-            Random r = new Random();
 
-			//Mock random sample data
-			int[] points = new int[sampleRate * 1];
-
-			for (int i = 0; i < points.Length; i++)
-			{
-				points[i] = r.Next(0, (int)timeDomainCanvas.Height);
-			}
-
-            int timeDomainWidth = sampleRate * zoom;
-            timeDomainCanvas.Width = timeDomainWidth;
-
-			DrawGraph(points, 1);
-		}
-
-        //uses lines between sample points to draw graph, uses spaces variable to determine which of
-        //the points to plot ie. plot every 10th point
-        private void DrawGraph(int[] points, int spaces)
-		{
-			for (int i = 0; i < points.Length - spaces; i += spaces)
-			{
-				Line segment = new Line();
-				segment.Stroke = System.Windows.Media.Brushes.LightSteelBlue;
-                segment.X1 = i * spaces * zoom;
-                segment.X2 = (i + 1) * spaces * zoom;
-                segment.Y1 = points[i];
-                segment.Y2 = points[i + spaces];
-                segment.StrokeThickness = 2;
-				timeDomainCanvas.Children.Add(segment);
-			}
-		}
+            WaveformViewer waveformViewer = new WaveformViewer(SAMPLE_RATE, BIT_DEPTH);
+            waveformViewer.GenerateRandomSamples(1);
+            content.Children.Add(waveformViewer);
+            waveformViewer.DrawGraph();
+        }
 	}
 }

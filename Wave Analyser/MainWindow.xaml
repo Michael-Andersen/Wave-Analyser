@@ -5,13 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wave_Analyser"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <StackPanel>
+        Title="MainWindow" Height="500" Width="1000">
+    <StackPanel x:Name="content">
         <Menu Background="#eee">
             <MenuItem Header="File"/>
         </Menu>
-        <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
-            <Canvas x:Name="timeDomainCanvas" Background="#ddd" ClipToBounds="True" Height="100"/>
-        </ScrollViewer>
     </StackPanel>
 </Window>
