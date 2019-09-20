@@ -24,7 +24,7 @@ namespace Wave_Analyser
         private int bitDepth;
         private int maxAmp;
         private int minAmp;
-        private double zoom;
+        private int zoom = 1;
         private int[] samples;
 
         public WaveformViewer(double sampleRate, int bitDepth)
@@ -41,7 +41,6 @@ namespace Wave_Analyser
         public void Init(double sampleRate, int bitDepth)
         {
             InitializeComponent();
-
             this.sampleRate = sampleRate;
             this.bitDepth = bitDepth;
             maxAmp = (int)Math.Pow(2, bitDepth - 1);
@@ -54,6 +53,8 @@ namespace Wave_Analyser
             double backkgroundHeight = background.ActualHeight / 2;
             DrawLine(background, 0, background.ActualWidth, backkgroundHeight, backkgroundHeight,
                 System.Windows.Media.Brushes.LightSteelBlue);
+			viewer.ScrollChanged += ScrollChanged;
+			
         }
 
         // uses lines between sample points to draw graph, uses spaces variable to determine which of
@@ -62,21 +63,34 @@ namespace Wave_Analyser
         {
             if (samples == null) return;
 
-            for (int i = 0; i < samples.Length - spaces; i += spaces)
+            for (int i = (int)viewer.HorizontalOffset; i < samples.Length - spaces; i += spaces)
             {
-                double y1 = ((double)(samples[i] - minAmp) / (maxAmp - minAmp)) * ActualHeight;
-                double y2 = ((double)(samples[i + 1] - minAmp) / (maxAmp - minAmp)) * ActualHeight;
+				if (i - viewer.HorizontalOffset >= background.ActualWidth)
+				{
+					break;
+				}
+				double y1 = ((double)(samples[i] - minAmp) / (maxAmp - minAmp)) * ActualHeight;
+                double y2 = ((double)(samples[i + spaces] - minAmp) / (maxAmp - minAmp)) * ActualHeight;
 
                 DrawLine(timeDomainGraph,
-                    i * spaces,
-                    (i + 1) * spaces,
+                    i,
+                    (i + spaces),
                     y1,
                     y2,
                     System.Windows.Media.Brushes.SteelBlue);
             }
         }
 
-        private void DrawLine(Canvas canvas, double x1, double x2, double y1, double y2, Brush color, double thickness = 1)
+		private void ScrollChanged(Object sender, ScrollChangedEventArgs e)
+		{
+			
+			timeDomainGraph.Children.Clear();
+			timeDomainGraph.UpdateLayout();
+			DrawGraph(zoom);
+			
+		}
+
+		private void DrawLine(Canvas canvas, double x1, double x2, double y1, double y2, Brush color, double thickness = 1)
         {
             Line line = new Line();
             line.X1 = x1;
@@ -88,7 +102,9 @@ namespace Wave_Analyser
             canvas.Children.Add(line);
         }
 
-        public void GenerateRandomSamples(double seconds)
+		
+
+		public void GenerateRandomSamples(double seconds)
         {
             Random random = new Random();
             timeDomainGraph.Width = sampleRate * seconds;

@@ -20,7 +20,7 @@ namespace Wave_Analyser
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-        public readonly double SAMPLE_RATE = 41000.0;
+        public readonly double SAMPLE_RATE = 44100.0;
         public readonly int BIT_DEPTH = 16;
 
 		public MainWindow()
@@ -28,9 +28,12 @@ namespace Wave_Analyser
 			InitializeComponent();
 
             WaveformViewer waveformViewer = new WaveformViewer(SAMPLE_RATE, BIT_DEPTH);
-            waveformViewer.GenerateRandomSamples(1);
-            content.Children.Add(waveformViewer);
-            waveformViewer.DrawGraph();
+            waveformViewer.GenerateRandomSamples(100);
+			content.Children.Add(waveformViewer);
+            waveformViewer.DrawGraph(1);
+
         }
+
+		
 	}
 }
