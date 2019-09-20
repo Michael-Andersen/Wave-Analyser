@@ -5,9 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wave_Analyser"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Canvas x:Name="timeDomainCanvas" HorizontalAlignment="Left" Height="155" VerticalAlignment="Top" Width="782"/>
-
-    </Grid>
+        Title="MainWindow" Height="500" Width="1000">
+    <StackPanel x:Name="content">
+        <Menu Background="#eee">
+            <MenuItem Header="File"/>
+        </Menu>
+    </StackPanel>
 </Window>
