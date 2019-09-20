@@ -27,13 +27,14 @@ namespace Wave_Analyser
 		{
 			InitializeComponent();
 
-            WaveformViewer waveformViewer = new WaveformViewer(SAMPLE_RATE, BIT_DEPTH);
-            waveformViewer.GenerateRandomSamples(100);
-			content.Children.Add(waveformViewer);
-            waveformViewer.DrawGraph(1);
+      WaveformViewer waveformViewer = new WaveformViewer(SAMPLE_RATE, BIT_DEPTH);
+      waveformViewer.GenerateRandomSamples(100);
+      content.Children.Add(waveformViewer);
+      waveformViewer.DrawGraph(1);
 
         }
 
 		
+
 	}
 }
