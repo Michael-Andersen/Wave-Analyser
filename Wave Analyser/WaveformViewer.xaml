@@ -6,14 +6,16 @@
              xmlns:local="clr-namespace:Wave_Analyser"
              mc:Ignorable="d" 
              d:DesignWidth="1000" Height="100"
-             Focusable="True">
+             Focusable="True"
+             Background="Transparent">
     <Grid>
-        <Canvas  x:Name="background" Background="#EEE"/>
-        <ScrollViewer x:Name="viewer" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
-            <Grid>
-                <Canvas x:Name="timeDomainGraph" ClipToBounds="True"/>
-            </Grid>
-           
-        </ScrollViewer> 
+            <Canvas  x:Name="background" Background="#EEE"/>
+            <ScrollViewer x:Name="viewer" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
+                <Grid>
+                    <Canvas x:Name="timeDomainGraph" Background="Transparent" ClipToBounds="True"/>
+                </Grid>
+
+            </ScrollViewer>
+         
     </Grid>
 </UserControl>

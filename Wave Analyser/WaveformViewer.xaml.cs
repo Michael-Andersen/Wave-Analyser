@@ -24,8 +24,8 @@ namespace Wave_Analyser
         private int bitDepth;
         private int maxAmp;
         private int minAmp;
-        private int zoom = 1;
-        private int[] samples;
+		private int zoom;
+        private double[] samples;
 
         public WaveformViewer(double sampleRate, int bitDepth)
         {
@@ -45,7 +45,7 @@ namespace Wave_Analyser
             this.bitDepth = bitDepth;
             maxAmp = (int)Math.Pow(2, bitDepth - 1);
             minAmp = -maxAmp--;
-
+			zoom = 128;
             Measure(new Size(1000, 1000));
             Arrange(new Rect(0, 0, 1000, 1000));
 
@@ -53,31 +53,40 @@ namespace Wave_Analyser
             double backkgroundHeight = background.ActualHeight / 2;
             DrawLine(background, 0, background.ActualWidth, backkgroundHeight, backkgroundHeight,
                 System.Windows.Media.Brushes.LightSteelBlue);
+			timeDomainGraph.MouseWheel += MouseWheelZoom;
 			viewer.ScrollChanged += ScrollChanged;
+			
 			
         }
 
         // uses lines between sample points to draw graph, uses spaces variable to determine which of
         // the points to plot ie. plot every 10th point
-        public void DrawGraph(int spaces = 1)
+        public void DrawGraph()
         {
-            if (samples == null) return;
-
+			if (timeDomainGraph.Width != samples.Length)
+			{
+				timeDomainGraph.Width = samples.Length;
+			}
+			int spaces = zoom;
+				
+			if (samples == null) return;
+			int xpos = (int) viewer.HorizontalOffset;
             for (int i = (int)viewer.HorizontalOffset; i < samples.Length - spaces; i += spaces)
             {
-				if (i - viewer.HorizontalOffset >= background.ActualWidth)
+				
+				if (xpos - viewer.HorizontalOffset >= background.ActualWidth)
 				{
 					break;
 				}
 				double y1 = ((double)(samples[i] - minAmp) / (maxAmp - minAmp)) * ActualHeight;
-                double y2 = ((double)(samples[i + spaces] - minAmp) / (maxAmp - minAmp)) * ActualHeight;
-
+			    double y2 = ((double)(samples[i + spaces] - minAmp) / (maxAmp - minAmp)) * ActualHeight;
                 DrawLine(timeDomainGraph,
-                    i,
-                    (i + spaces),
+                    xpos,
+                    (xpos + 1),
                     y1,
                     y2,
                     System.Windows.Media.Brushes.SteelBlue);
+				xpos++;
             }
         }
 
@@ -86,10 +95,39 @@ namespace Wave_Analyser
 			
 			timeDomainGraph.Children.Clear();
 			timeDomainGraph.UpdateLayout();
-			DrawGraph(zoom);
+			DrawGraph();
 			
 		}
-
+		private void MouseWheelZoom(Object sender, MouseWheelEventArgs e)
+		{
+			int zoomFactor = 2;
+		
+			if (e.Delta > 0)
+			{
+				if (zoom <= 1)
+				{
+					zoom = 1;
+					return; // max zoom in is not skipping any samples
+				}
+				zoom = (zoom / zoomFactor);
+				timeDomainGraph.Children.Clear();
+				timeDomainGraph.UpdateLayout();
+				DrawGraph();
+			}
+			else
+			{	
+				if (zoom * zoomFactor > samples.Length / 16)
+				{
+					return; // max zoom out is only drawing 16 samples
+				}
+				zoom = (zoom * zoomFactor);
+				int debugzoom = zoom;
+				timeDomainGraph.Children.Clear();
+				timeDomainGraph.UpdateLayout();
+				DrawGraph();
+			}
+		}
+		
 		private void DrawLine(Canvas canvas, double x1, double x2, double y1, double y2, Brush color, double thickness = 1)
         {
             Line line = new Line();
@@ -102,14 +140,38 @@ namespace Wave_Analyser
             canvas.Children.Add(line);
         }
 
+		private void ViewerPreviewMouseDown(object sender, MouseButtonEventArgs e)
+		{
+			var clickedElement = e.OriginalSource;
+		}
+
+		public void GenerateSineData(double seconds)
+		{
+			Random random = new Random();
+			int[] freqs = new int[10]; 
+			for (int i = 0; i < 10; i++)
+			{
+				freqs[i] = random.Next(1, 5000);
+			}
+			
+			samples = new double[(int)(sampleRate*seconds)];
+			for (int i = 0; i < sampleRate * seconds; i++)
+			{
+				double time = i / sampleRate;
+				samples[i] = 0;
+				for (int j = 0; j < freqs.Length; j++)
+				{
+					samples[i] += (maxAmp) * (1.0/(freqs.Length)) * Math.Sin(2 * Math.PI * freqs[j] * time);
+				}
+			}
+		}
 		
 
 		public void GenerateRandomSamples(double seconds)
         {
             Random random = new Random();
-            timeDomainGraph.Width = sampleRate * seconds;
             int numSamples = (int)(sampleRate * seconds);
-            samples = new int[numSamples];
+            samples = new double[numSamples];
 
             for (int i = 0; i < samples.Length; i++)
             {
