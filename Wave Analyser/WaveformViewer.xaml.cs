@@ -48,38 +48,52 @@ namespace Wave_Analyser
 			zoom = 128;
             Measure(new Size(1000, 1000));
             Arrange(new Rect(0, 0, 1000, 1000));
-
-            // draw the zero line
-            double backkgroundHeight = background.ActualHeight / 2;
-            DrawLine(background, 0, background.ActualWidth, backkgroundHeight, backkgroundHeight,
-                System.Windows.Media.Brushes.LightSteelBlue);
 			timeDomainGraph.MouseWheel += MouseWheelZoom;
 			viewer.ScrollChanged += ScrollChanged;
-			
-			
         }
 
-        // uses lines between sample points to draw graph, uses spaces variable to determine which of
-        // the points to plot ie. plot every 10th point
-        public void DrawGraph()
-        {
-			if (timeDomainGraph.Width != samples.Length)
+		private void DrawAxis()
+		{
+			//remove old axis
+			background.Children.Clear();
+			background.UpdateLayout();
+			// draw the zero line
+			double backgroundHeight = background.ActualHeight / 2;
+			DrawLine(background, 0, background.ActualWidth + 20, backgroundHeight, backgroundHeight,
+				System.Windows.Media.Brushes.LightSteelBlue);
+			//draw the time axis
+			DrawLine(background, 0, background.ActualWidth + 20,
+			background.ActualHeight - 15, background.ActualHeight - 15, System.Windows.Media.Brushes.Black, 2);
+			//label times
+			for (int i = 0; i < background.ActualWidth + 20; i += 80)
 			{
-				timeDomainGraph.Width = samples.Length;
+				double timeDisplay = Math.Round((i + viewer.HorizontalOffset) * zoom / sampleRate, 3);
+				DrawLine(background, i, i + 0.5, background.ActualHeight - 10, background.ActualHeight - 15,
+					System.Windows.Media.Brushes.Black);
+				Text(background, i, background.ActualHeight - 15,
+					"" + timeDisplay,
+					System.Windows.Media.Brushes.Black);
 			}
-			int spaces = zoom;
-				
+		}
+		public void DrawGraph()
+        {
+			DrawAxis();
 			if (samples == null) return;
+			int spaces = zoom;
+			timeDomainGraph.Width = (samples.Length / spaces > background.ActualWidth) ? 
+				samples.Length  / spaces + 100 : background.ActualWidth + 100;	
+			
 			int xpos = (int) viewer.HorizontalOffset;
             for (int i = (int)viewer.HorizontalOffset; i < samples.Length - spaces; i += spaces)
             {
 				
 				if (xpos - viewer.HorizontalOffset >= background.ActualWidth)
 				{
-					break;
+					break; //stop drawing when out of view
 				}
-				double y1 = ((double)(samples[i] - minAmp) / (maxAmp - minAmp)) * ActualHeight;
-			    double y2 = ((double)(samples[i + spaces] - minAmp) / (maxAmp - minAmp)) * ActualHeight;
+				
+				double y1 = ((double)(samples[i] - minAmp) / (maxAmp - minAmp)) * background.ActualHeight;
+			    double y2 = ((double)(samples[i + spaces] - minAmp) / (maxAmp - minAmp)) * background.ActualHeight;
                 DrawLine(timeDomainGraph,
                     xpos,
                     (xpos + 1),
@@ -87,17 +101,16 @@ namespace Wave_Analyser
                     y2,
                     System.Windows.Media.Brushes.SteelBlue);
 				xpos++;
-            }
+            }			
         }
 
 		private void ScrollChanged(Object sender, ScrollChangedEventArgs e)
 		{
-			
 			timeDomainGraph.Children.Clear();
 			timeDomainGraph.UpdateLayout();
-			DrawGraph();
-			
+			DrawGraph();		
 		}
+
 		private void MouseWheelZoom(Object sender, MouseWheelEventArgs e)
 		{
 			int zoomFactor = 2;
@@ -110,6 +123,7 @@ namespace Wave_Analyser
 					return; // max zoom in is not skipping any samples
 				}
 				zoom = (zoom / zoomFactor);
+				viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset * zoomFactor);
 				timeDomainGraph.Children.Clear();
 				timeDomainGraph.UpdateLayout();
 				DrawGraph();
@@ -121,7 +135,7 @@ namespace Wave_Analyser
 					return; // max zoom out is only drawing 16 samples
 				}
 				zoom = (zoom * zoomFactor);
-				int debugzoom = zoom;
+				viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset / zoomFactor);
 				timeDomainGraph.Children.Clear();
 				timeDomainGraph.UpdateLayout();
 				DrawGraph();
@@ -140,9 +154,15 @@ namespace Wave_Analyser
             canvas.Children.Add(line);
         }
 
-		private void ViewerPreviewMouseDown(object sender, MouseButtonEventArgs e)
+		private void Text(Canvas canvas, double x, double y, string text, Brush colour)
 		{
-			var clickedElement = e.OriginalSource;
+			TextBlock textBlock = new TextBlock();
+			textBlock.Text = text;
+			textBlock.Foreground = colour;
+			Canvas.SetLeft(textBlock, x);
+			Canvas.SetTop(textBlock, y);
+			canvas.Children.Add(textBlock);
+
 		}
 
 		public void GenerateSineData(double seconds)
@@ -161,7 +181,8 @@ namespace Wave_Analyser
 				samples[i] = 0;
 				for (int j = 0; j < freqs.Length; j++)
 				{
-					samples[i] += (maxAmp) * (1.0/(freqs.Length)) * Math.Sin(2 * Math.PI * freqs[j] * time);
+					samples[i] += (maxAmp)/freqs.Length * Math.Sin(2 * Math.PI * freqs[j] * time);
+					
 				}
 			}
 		}

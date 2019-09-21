@@ -5,14 +5,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Wave_Analyser"
              mc:Ignorable="d" 
-             d:DesignWidth="1000" Height="100"
+             d:DesignWidth="1000" Height="150"
              Focusable="True"
              Background="Transparent">
     <Grid>
-            <Canvas  x:Name="background" Background="#EEE"/>
-            <ScrollViewer x:Name="viewer" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
+        <Canvas  x:Name="background" Height="100" Background="#EEE" ClipToBounds="True"/> 
+        <ScrollViewer x:Name="viewer" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
                 <Grid>
-                    <Canvas x:Name="timeDomainGraph" Background="Transparent" ClipToBounds="True"/>
+                <Canvas x:Name="timeDomainGraph" HorizontalAlignment="Left" Height="100" Background="Transparent" ClipToBounds="True"/>
                 </Grid>
 
             </ScrollViewer>
