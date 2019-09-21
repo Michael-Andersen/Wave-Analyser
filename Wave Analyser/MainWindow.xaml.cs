@@ -26,15 +26,10 @@ namespace Wave_Analyser
 		public MainWindow()
 		{
 			InitializeComponent();
-
-      WaveformViewer waveformViewer = new WaveformViewer(SAMPLE_RATE, BIT_DEPTH);
-	  waveformViewer.GenerateSineData(180);
-      content.Children.Add(waveformViewer);
-      waveformViewer.DrawGraph();
-
+            WaveformViewer waveformViewer = new WaveformViewer(SAMPLE_RATE, BIT_DEPTH);
+	        waveformViewer.GenerateSineData(180);
+            content.Children.Add(waveformViewer);
+            waveformViewer.DrawGraph();
         }
-
-		
-
 	}
 }

@@ -28,8 +28,7 @@ namespace Wave_Analyser
         private double[] samples;
 
         public WaveformViewer(double sampleRate, int bitDepth)
-        {
-            
+        {   
             Init(sampleRate, bitDepth);
         }
 
@@ -57,7 +56,7 @@ namespace Wave_Analyser
 			//remove old axis
 			background.Children.Clear();
 			background.UpdateLayout();
-			// draw the zero line
+			//draw the zero line
 			double backgroundHeight = background.ActualHeight / 2;
 			DrawLine(background, 0, background.ActualWidth + 20, backgroundHeight, backgroundHeight,
 				System.Windows.Media.Brushes.LightSteelBlue);
@@ -75,6 +74,7 @@ namespace Wave_Analyser
 					System.Windows.Media.Brushes.Black);
 			}
 		}
+
 		public void DrawGraph()
         {
 			DrawAxis();
@@ -86,7 +86,6 @@ namespace Wave_Analyser
 			int xpos = (int) viewer.HorizontalOffset;
             for (int i = (int)viewer.HorizontalOffset; i < samples.Length - spaces; i += spaces)
             {
-				
 				if (xpos - viewer.HorizontalOffset >= background.ActualWidth)
 				{
 					break; //stop drawing when out of view
@@ -120,7 +119,7 @@ namespace Wave_Analyser
 				if (zoom <= 1)
 				{
 					zoom = 1;
-					return; // max zoom in is not skipping any samples
+					return; //max zoom in is not skipping any samples
 				}
 				zoom = (zoom / zoomFactor);
 				viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset * zoomFactor);
@@ -132,7 +131,7 @@ namespace Wave_Analyser
 			{	
 				if (zoom * zoomFactor > samples.Length / 16)
 				{
-					return; // max zoom out is only drawing 16 samples
+					return; //max zoom out is only drawing 16 samples
 				}
 				zoom = (zoom * zoomFactor);
 				viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset / zoomFactor);
@@ -162,7 +161,6 @@ namespace Wave_Analyser
 			Canvas.SetLeft(textBlock, x);
 			Canvas.SetTop(textBlock, y);
 			canvas.Children.Add(textBlock);
-
 		}
 
 		public void GenerateSineData(double seconds)
@@ -187,7 +185,6 @@ namespace Wave_Analyser
 			}
 		}
 		
-
 		public void GenerateRandomSamples(double seconds)
         {
             Random random = new Random();
