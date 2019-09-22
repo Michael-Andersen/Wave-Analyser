@@ -9,10 +9,10 @@
              Focusable="True"
              Background="Transparent">
     <Grid>
-        <Canvas  x:Name="background" Height="100" Background="#EEE" ClipToBounds="True"/>
+        <Canvas  x:Name="background" Background="#EEE" ClipToBounds="True" Margin="0,0,0,15"/>
         <ScrollViewer x:Name="viewer" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
-            <Grid>
-                <Canvas x:Name="timeDomainGraph" HorizontalAlignment="Left" Height="100" Background="Transparent" ClipToBounds="True"/>
+            <Grid Margin="0,0,0,15">
+                <Canvas x:Name="timeDomainGraph" HorizontalAlignment="Left" Background="Transparent" ClipToBounds="True"/>
             </Grid>
         </ScrollViewer>
     </Grid>

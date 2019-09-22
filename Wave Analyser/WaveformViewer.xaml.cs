@@ -74,7 +74,6 @@ namespace Wave_Analyser
 					System.Windows.Media.Brushes.Black);
 			}
 		}
-
 		public void DrawGraph()
         {
 			DrawAxis();
