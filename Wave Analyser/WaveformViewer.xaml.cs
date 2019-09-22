@@ -26,6 +26,7 @@ namespace Wave_Analyser
         private int minAmp;
 		private int zoom;
         private int[] samples;
+        private Random random;
 
         public WaveformViewer(double sampleRate, int bitDepth)
         {   
@@ -45,6 +46,7 @@ namespace Wave_Analyser
             maxAmp = (int)Math.Pow(2, bitDepth - 1);
             minAmp = -maxAmp--;
 			zoom = 128;
+            random = new Random();
             Measure(new Size(1000, 1000));
             Arrange(new Rect(0, 0, 1000, 1000));
 			timeDomainGraph.MouseWheel += MouseWheelZoom;
@@ -167,7 +169,6 @@ namespace Wave_Analyser
 
 		public void GenerateSineData(double seconds)
 		{
-			Random random = new Random();
 			int[] freqs = new int[10]; 
 			for (int i = 0; i < 10; i++)
 			{
@@ -175,7 +176,7 @@ namespace Wave_Analyser
 			}
 			
 			samples = new int[(int)(sampleRate*seconds)];
-			for (int i = 0; i < sampleRate * seconds; i++)
+			for (int i = 0; i < samples.Length; i++)
 			{
 				double time = i / sampleRate;
 				samples[i] = 0;
@@ -187,13 +188,21 @@ namespace Wave_Analyser
 				}
 			}
 		}
+
+        public void GenerateSineTone(double seconds, double frequency)
+        {
+            samples = new int[(int)(sampleRate * seconds)];
+            for (int i = 0; i < samples.Length; i++)
+            {
+                double time = i / sampleRate;
+                double amp = maxAmp * Math.Sin(2 * Math.PI * frequency * time);
+                samples[i] = (int)amp;
+            }
+        }
 		
 		public void GenerateRandomSamples(double seconds)
         {
-            Random random = new Random();
-            int numSamples = (int)(sampleRate * seconds);
-            samples = new int[numSamples];
-
+            samples = new int[(int)(sampleRate * seconds)];
             for (int i = 0; i < samples.Length; i++)
             {
                 samples[i] = random.Next(minAmp, maxAmp + 1);

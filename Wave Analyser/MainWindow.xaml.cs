@@ -27,7 +27,7 @@ namespace Wave_Analyser
 		{
 			InitializeComponent();
             WaveformViewer waveformViewer = new WaveformViewer(SAMPLE_RATE, BIT_DEPTH);
-	        waveformViewer.GenerateSineData(1);
+	        waveformViewer.GenerateSineTone(10, 550);
             content.Children.Add(waveformViewer);
             waveformViewer.DrawGraph();
         }
