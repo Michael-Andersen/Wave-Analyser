@@ -25,7 +25,7 @@ namespace Wave_Analyser
         private int maxAmp;
         private int minAmp;
 		private int zoom;
-        private double[] samples;
+        private int[] samples;
 
         public WaveformViewer(double sampleRate, int bitDepth)
         {   
@@ -51,6 +51,12 @@ namespace Wave_Analyser
 			viewer.ScrollChanged += ScrollChanged;
         }
 
+        public void DrawGraph()
+        {
+            DrawAxis();
+            DrawWaveform();
+        }
+
 		private void DrawAxis()
 		{
 			//remove old axis
@@ -74,13 +80,16 @@ namespace Wave_Analyser
 					System.Windows.Media.Brushes.Black);
 			}
 		}
-		public void DrawGraph()
+
+		public void DrawWaveform()
         {
-			DrawAxis();
-			if (samples == null) return;
+            if (samples == null) return;
+            //remove old waveform
+            timeDomainGraph.Children.Clear();
+            timeDomainGraph.UpdateLayout();
 			int spaces = zoom;
 			timeDomainGraph.Width = (samples.Length / spaces > background.ActualWidth) ? 
-				samples.Length  / spaces + 100 : background.ActualWidth + 100;	
+				samples.Length  / spaces : background.ActualWidth;	
 			
 			int xpos = (int) viewer.HorizontalOffset;
             for (int i = (int)viewer.HorizontalOffset; i < samples.Length - spaces; i += spaces)
@@ -104,8 +113,6 @@ namespace Wave_Analyser
 
 		private void ScrollChanged(Object sender, ScrollChangedEventArgs e)
 		{
-			timeDomainGraph.Children.Clear();
-			timeDomainGraph.UpdateLayout();
 			DrawGraph();		
 		}
 
@@ -122,9 +129,7 @@ namespace Wave_Analyser
 				}
 				zoom = (zoom / zoomFactor);
 				viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset * zoomFactor);
-				timeDomainGraph.Children.Clear();
-				timeDomainGraph.UpdateLayout();
-				DrawGraph();
+                DrawGraph();
 			}
 			else
 			{	
@@ -134,9 +139,7 @@ namespace Wave_Analyser
 				}
 				zoom = (zoom * zoomFactor);
 				viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset / zoomFactor);
-				timeDomainGraph.Children.Clear();
-				timeDomainGraph.UpdateLayout();
-				DrawGraph();
+                DrawGraph();
 			}
 		}
 		
@@ -171,14 +174,15 @@ namespace Wave_Analyser
 				freqs[i] = random.Next(1, 5000);
 			}
 			
-			samples = new double[(int)(sampleRate*seconds)];
+			samples = new int[(int)(sampleRate*seconds)];
 			for (int i = 0; i < sampleRate * seconds; i++)
 			{
 				double time = i / sampleRate;
 				samples[i] = 0;
 				for (int j = 0; j < freqs.Length; j++)
 				{
-					samples[i] += (maxAmp)/freqs.Length * Math.Sin(2 * Math.PI * freqs[j] * time);
+                    double amp = (maxAmp) / freqs.Length * Math.Sin(2 * Math.PI * freqs[j] * time);
+                    samples[i] += (int)amp;
 					
 				}
 			}
@@ -188,7 +192,7 @@ namespace Wave_Analyser
         {
             Random random = new Random();
             int numSamples = (int)(sampleRate * seconds);
-            samples = new double[numSamples];
+            samples = new int[numSamples];
 
             for (int i = 0; i < samples.Length; i++)
             {

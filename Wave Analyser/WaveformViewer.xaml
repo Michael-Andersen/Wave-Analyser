@@ -9,8 +9,8 @@
              Focusable="True"
              Background="Transparent">
     <Grid>
-        <Canvas  x:Name="background" Background="#EEE" ClipToBounds="True" Margin="0,0,0,15"/>
-        <ScrollViewer x:Name="viewer" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
+        <Canvas  x:Name="background" Background="#FCFCFC" ClipToBounds="True" Margin="0,0,0,15"/>
+        <ScrollViewer x:Name="viewer" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Visible">
             <Grid Margin="0,0,0,15">
                 <Canvas x:Name="timeDomainGraph" HorizontalAlignment="Left" Background="Transparent" ClipToBounds="True"/>
             </Grid>
