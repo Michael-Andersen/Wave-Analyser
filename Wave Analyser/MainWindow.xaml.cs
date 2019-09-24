@@ -30,6 +30,9 @@ namespace Wave_Analyser
 	        waveformViewer.GenerateSineTone(10, 550);
             content.Children.Add(waveformViewer);
             waveformViewer.DrawGraph();
+			FrequencyWindow fw = new FrequencyWindow();
+			fw.Show();
+
         }
 	}
 }
