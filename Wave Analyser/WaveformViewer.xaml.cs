@@ -20,9 +20,9 @@ namespace Wave_Analyser
     /// </summary>
     public partial class WaveformViewer : UserControl
     {
-        private double sampleRate;
+        public static double sampleRate;
         private int bitDepth;
-        private int maxAmp;
+        public static int maxAmp;
         private int minAmp;
 		private int zoom;
         private int[] samples;
@@ -41,7 +41,7 @@ namespace Wave_Analyser
         public void Init(double sampleRate, int bitDepth)
         {
             InitializeComponent();
-            this.sampleRate = sampleRate;
+            WaveformViewer.sampleRate = sampleRate;
             this.bitDepth = bitDepth;
             maxAmp = (int)Math.Pow(2, bitDepth - 1);
             minAmp = -maxAmp--;
@@ -66,21 +66,26 @@ namespace Wave_Analyser
 			background.UpdateLayout();
 			//draw the zero line
 			double backgroundHeight = background.ActualHeight / 2;
-			DrawLine(background, 0, background.ActualWidth + 20, backgroundHeight, backgroundHeight,
-				System.Windows.Media.Brushes.LightSteelBlue);
+			DrawTools.DrawLine(background, 0, background.ActualWidth + 20, backgroundHeight, backgroundHeight,
+				Brushes.LightSteelBlue);
 			//draw the time axis
-			DrawLine(background, 0, background.ActualWidth + 20,
-			background.ActualHeight - 15, background.ActualHeight - 15, System.Windows.Media.Brushes.Black, 2);
+			DrawTools.DrawLine(background, 0, background.ActualWidth + 20,
+			background.ActualHeight - 15, background.ActualHeight - 15, Brushes.Black, 2);
 			//label times
 			for (int i = 0; i < background.ActualWidth + 20; i += 80)
 			{
 				double timeDisplay = Math.Round((i + viewer.HorizontalOffset) * zoom / sampleRate, 3);
-				DrawLine(background, i, i + 0.5, background.ActualHeight - 10, background.ActualHeight - 15,
-					System.Windows.Media.Brushes.Black);
-				Text(background, i, background.ActualHeight - 15,
+				DrawTools.DrawLine(background, i, i + 0.5, background.ActualHeight - 10, background.ActualHeight - 15,
+					Brushes.Black);
+				DrawTools.Text(background, i, background.ActualHeight - 15,
 					"" + timeDisplay,
-					System.Windows.Media.Brushes.Black);
+					Brushes.Black);
 			}
+		}
+
+		public int[] getSamples()
+		{
+			return samples;
 		}
 
 		public void DrawWaveform()
@@ -103,12 +108,12 @@ namespace Wave_Analyser
 				
 				double y1 = ((double)(samples[i] - minAmp) / (maxAmp - minAmp)) * background.ActualHeight;
 			    double y2 = ((double)(samples[i + spaces] - minAmp) / (maxAmp - minAmp)) * background.ActualHeight;
-                DrawLine(timeDomainGraph,
+                DrawTools.DrawLine(timeDomainGraph,
                     xpos,
                     (xpos + 1),
                     y1,
                     y2,
-                    System.Windows.Media.Brushes.SteelBlue);
+                    Brushes.SteelBlue);
 				xpos++;
             }			
         }
@@ -145,35 +150,8 @@ namespace Wave_Analyser
 			}
 		}
 		
-		private void DrawLine(Canvas canvas, double x1, double x2, double y1, double y2, Brush color, double thickness = 1)
-        {
-            Line line = new Line();
-            line.X1 = x1;
-            line.X2 = x2;
-            line.Y1 = y1;
-            line.Y2 = y2;
-            line.Stroke = color;
-            line.StrokeThickness = thickness;
-            canvas.Children.Add(line);
-        }
-
-		private void Text(Canvas canvas, double x, double y, string text, Brush colour)
+		public void GenerateSineData(double seconds, int[] freqs)
 		{
-			TextBlock textBlock = new TextBlock();
-			textBlock.Text = text;
-			textBlock.Foreground = colour;
-			Canvas.SetLeft(textBlock, x);
-			Canvas.SetTop(textBlock, y);
-			canvas.Children.Add(textBlock);
-		}
-
-		public void GenerateSineData(double seconds)
-		{
-			int[] freqs = new int[10]; 
-			for (int i = 0; i < 10; i++)
-			{
-				freqs[i] = random.Next(1, 5000);
-			}
 			
 			samples = new int[(int)(sampleRate*seconds)];
 			for (int i = 0; i < samples.Length; i++)

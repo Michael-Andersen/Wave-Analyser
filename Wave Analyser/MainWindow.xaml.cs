@@ -27,10 +27,13 @@ namespace Wave_Analyser
 		{
 			InitializeComponent();
             WaveformViewer waveformViewer = new WaveformViewer(SAMPLE_RATE, BIT_DEPTH);
-	        waveformViewer.GenerateSineTone(10, 550);
+			//waveformViewer.GenerateSineTone(10, 150);
+			waveformViewer.GenerateSineData(180,new int[] { 150, 300, 1000 });
             content.Children.Add(waveformViewer);
             waveformViewer.DrawGraph();
 			FrequencyWindow fw = new FrequencyWindow();
+			fw.setSamples(waveformViewer.getSamples());
+			fw.init();
 			fw.Show();
 
         }

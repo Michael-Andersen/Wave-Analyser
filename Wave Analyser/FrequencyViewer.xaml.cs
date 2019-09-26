@@ -19,15 +19,7 @@ namespace Wave_Analyser
 			Arrange(new Rect(0, 0, 1000, 1000));
 	
 		}
-		private void Text(Canvas canvas, double x, double y, string text, Brush colour)
-		{
-			TextBlock textBlock = new TextBlock();
-			textBlock.Text = text;
-			textBlock.Foreground = colour;
-			Canvas.SetLeft(textBlock, x);
-			Canvas.SetTop(textBlock, y);
-			canvas.Children.Add(textBlock);
-		}
+
 		private void DrawBar(Canvas canvas, double frequency, double amplitude, double width)
 		{
 			double bottom = 200;
@@ -41,17 +33,33 @@ namespace Wave_Analyser
 			canvas.Children.Add(bar);
 		}
 
-		public void DrawGraph(int binSize, int maxFreq)
-		{
 
+		public void DrawGraph(double binSize, int maxFreq)
+		{
+			DrawTools.DrawLine(frequencyDomainGraph, 45, 45, 200, 0, Brushes.Black);
+			for (int i = 0; i < 200; i += 20)
+			{
+				DrawTools.Text(frequencyDomainGraph, 0, 200 - i,"" + Math.Round(i * WaveformViewer.maxAmp / 300.0, 0), Brushes.Black);
+			}
 			frequencyDomainGraph.Width = maxFreq * 30.0 / binSize;
 			for (int i = 0; i < frequencies.Length; i++)
 			{
-				DrawBar(frequencyDomainGraph, 30 + (i) * 30, frequencies[i], 10);
-				Text(frequencyDomainGraph, 30 + i * 30, 215, i * binSize + "", Brushes.Black);
+				DrawBar(frequencyDomainGraph, 50 + (i) * 30, frequencies[i] * (200.0/WaveformViewer.maxAmp), 10);
+				DrawTools.Text(frequencyDomainGraph, 50 + i * 30, 215, Math.Round(i * binSize, 0) + "", Brushes.Black);
 			}
 			double z = fViewer.ViewportWidth;
 			fViewer.ScrollToEnd();
+		}
+
+		public void GenerateFromFourier(int[] samples, int N)
+		{
+			Complex[] fourierResults = Fourier.dft(samples, N);
+			frequencies = new double[fourierResults.Length];
+			for (int i = 0; i < frequencies.Length; i++)
+			{
+				frequencies[i] = fourierResults[i].VectorLength();
+			}
+
 		}
 
 		public void GenerateFreqData()
