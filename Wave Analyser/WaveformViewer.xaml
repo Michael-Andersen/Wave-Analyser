@@ -11,8 +11,20 @@
     <Grid>
         <Canvas  x:Name="background" Background="#FCFCFC" ClipToBounds="True" Margin="0,0,0,15"/>
         <ScrollViewer x:Name="viewer" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Visible">
-            <Grid Margin="0,0,0,0">
+            <Grid x:Name="theGrid"
+        MouseDown="Grid_MouseDown"
+        MouseUp="Grid_MouseUp"
+        MouseMove="Grid_MouseMove"
+        Background="Transparent" Margin="0,0,0,0">
                 <Canvas x:Name="timeDomainGraph" HorizontalAlignment="Left" Background="Transparent" ClipToBounds="True"/>
+                <Canvas>
+                    <Rectangle
+                x:Name="selectionBox"
+                Visibility="Collapsed"
+                Stroke="Black"
+                StrokeThickness="1"
+                />
+                </Canvas>
             </Grid>
         </ScrollViewer>
     </Grid>

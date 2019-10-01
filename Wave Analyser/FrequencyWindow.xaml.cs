@@ -20,24 +20,40 @@ namespace Wave_Analyser
     public partial class FrequencyWindow : Window
     {
 		int[] samples;
+		int start;
+		int finish;
+		FrequencyViewer fv;
 
-        public FrequencyWindow()
+		public FrequencyWindow()
         {
             InitializeComponent();
+			fv = new FrequencyViewer();
+			content.Children.Add(fv);
 			
 		}
 
 		public void init()
 		{
-			FrequencyViewer fv = new FrequencyViewer();
-			fv.GenerateFromFourier(samples, 2000);
-			fv.DrawGraph(Fourier.BinSize(WaveformViewer.sampleRate, 2000), 7000);
-			content.Children.Add(fv);
+			
+			fv.GenerateFromFourier(samples, samples.Length);
+			fv.DrawGraph(Fourier.BinSize(WaveformViewer.sampleRate, samples.Length), 44100);
+			
 		}
 
 		public void setSamples(int[] samples)
 		{
-			this.samples = samples;
+			int j = 0;
+			this.samples = new int[finish - start];
+			for (int i = start; i < finish; i++)
+			{
+				this.samples[j++] = samples[i];
+			}
+		}
+
+		public void setStartandFinish(int s, int f)
+		{
+			start = s;
+			finish = f;
 		}
     }
 }

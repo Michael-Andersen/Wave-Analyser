@@ -36,6 +36,11 @@ namespace Wave_Analyser
 
 		public void DrawGraph(double binSize, int maxFreq)
 		{
+
+			frequencyDomainGraph.Children.Clear();
+			frequencyDomainGraph.UpdateLayout();
+			background.Children.Clear();
+			background.UpdateLayout();
 			DrawTools.DrawLine(frequencyDomainGraph, 45, 45, 200, 0, Brushes.Black);
 			for (int i = 0; i < 200; i += 20)
 			{

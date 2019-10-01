@@ -27,8 +27,12 @@ namespace Wave_Analyser
 		private int zoom;
         private int[] samples;
         private Random random;
+		private int selectStart;
+		private int selectEnd;
+		bool mouseDown = false;
+		Point mouseDownPos;
 
-        public WaveformViewer(double sampleRate, int bitDepth)
+		public WaveformViewer(double sampleRate, int bitDepth)
         {   
             Init(sampleRate, bitDepth);
         }
@@ -53,7 +57,74 @@ namespace Wave_Analyser
 			viewer.ScrollChanged += ScrollChanged;
         }
 
-        public void DrawGraph()
+		private void Grid_MouseDown(object sender, MouseButtonEventArgs e)
+		{
+			mouseDown = true;
+			mouseDownPos = e.GetPosition(theGrid);
+			theGrid.CaptureMouse();
+
+			Canvas.SetLeft(selectionBox, mouseDownPos.X);
+			Canvas.SetTop(selectionBox, mouseDownPos.Y);
+			selectionBox.Width = 0;
+			selectionBox.Height = timeDomainGraph.ActualHeight;
+
+			selectionBox.Visibility = Visibility.Visible;
+		}
+
+		private void Grid_MouseUp(object sender, MouseButtonEventArgs e)
+		{
+			mouseDown = false;
+			theGrid.ReleaseMouseCapture();
+
+
+			selectionBox.Opacity = 0.2;
+			selectionBox.Fill = Brushes.PaleVioletRed;
+			Point mouseUpPos = e.GetPosition(theGrid);
+			if (mouseUpPos.X > mouseDownPos.X)
+			{
+				selectStart = (int) mouseDownPos.X * zoom ;
+				selectEnd = (int) mouseUpPos.X *zoom ;
+			} else
+			{
+				selectStart = (int) mouseUpPos.X * zoom;
+				selectEnd = (int) mouseDownPos.X * zoom;
+				
+			}
+		
+		}
+
+		public int getSelectStart()
+		{
+			return selectStart;
+		}
+
+		public int getSelectEnd()
+		{
+			return selectEnd;
+		}
+
+		private void Grid_MouseMove(object sender, MouseEventArgs e)
+		{
+			if (mouseDown)
+			{
+				Point mousePos = e.GetPosition(theGrid);
+
+				if (mouseDownPos.X < mousePos.X)
+				{
+					Canvas.SetLeft(selectionBox, mouseDownPos.X);
+					selectionBox.Width = mousePos.X - mouseDownPos.X;
+				}
+				else
+				{
+					Canvas.SetLeft(selectionBox, mousePos.X);
+					selectionBox.Width = mouseDownPos.X - mousePos.X;
+				}
+					Canvas.SetTop(selectionBox, 0);
+				
+			}
+		}
+
+				public void DrawGraph()
         {
             DrawAxis();
             DrawWaveform();

@@ -10,5 +10,6 @@
         <Menu Background="#eee">
             <MenuItem Header="File"/>
         </Menu>
+        <Button Content="Button" Click="Fourier_Click"/>
     </StackPanel>
 </Window>

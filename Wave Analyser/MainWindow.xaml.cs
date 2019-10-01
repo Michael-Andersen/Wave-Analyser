@@ -22,20 +22,27 @@ namespace Wave_Analyser
 	{
         public readonly double SAMPLE_RATE = 44100.0;
         public readonly int BIT_DEPTH = 16;
-
+		FrequencyWindow fw;
+		WaveformViewer waveformViewer;
 		public MainWindow()
 		{
 			InitializeComponent();
-            WaveformViewer waveformViewer = new WaveformViewer(SAMPLE_RATE, BIT_DEPTH);
+            waveformViewer = new WaveformViewer(SAMPLE_RATE, BIT_DEPTH);
 			//waveformViewer.GenerateSineTone(10, 150);
 			waveformViewer.GenerateSineData(180,new int[] { 150, 300, 1000 });
             content.Children.Add(waveformViewer);
             waveformViewer.DrawGraph();
-			FrequencyWindow fw = new FrequencyWindow();
-			fw.setSamples(waveformViewer.getSamples());
-			fw.init();
+			fw = new FrequencyWindow();
 			fw.Show();
 
         }
+
+		public void Fourier_Click(object sender, RoutedEventArgs e)
+		{
+			fw.setStartandFinish(waveformViewer.getSelectStart(), waveformViewer.getSelectEnd());
+			fw.setSamples(waveformViewer.getSamples());
+			fw.init();
+			
+		}
 	}
 }
