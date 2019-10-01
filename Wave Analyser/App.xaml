@@ -8,7 +8,8 @@
         <SolidColorBrush x:Key="menuBackgroundBrush" Color="#eee"/>
         <SolidColorBrush x:Key="waveformPrimaryBrush" Color="#4287f5"/>
         <SolidColorBrush x:Key="waveformSecondaryBrush" Color="#70a5fa"/>
-        <SolidColorBrush x:Key="waveformBackgroundBrush" Color="#edf4ff"/>
-        <SolidColorBrush x:Key="frequencyBarBrush" Color="#348f18"/>
+        <SolidColorBrush x:Key="timeDomainBackgroundBrush" Color="#edf4ff"/>
+        <SolidColorBrush x:Key="freqDomainBarBrush" Color="#348f18"/>
+        <SolidColorBrush x:Key="freqDomainBackgroundBrush" Color="#fcfcfc"/>
     </Application.Resources>
 </Application>

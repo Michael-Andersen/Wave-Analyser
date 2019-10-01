@@ -149,7 +149,7 @@ namespace Wave_Analyser
                 DrawGraph();
 			}
 		}
-		
+
 		public void GenerateSineData(double seconds, int[] freqs)
         { 	
 			samples = new int[(int)(sampleRate*seconds)];
@@ -176,7 +176,7 @@ namespace Wave_Analyser
                 samples[i] = (int)amp;
             }
         }
-		
+
 		public void GenerateRandomSamples(double seconds)
         {
             samples = new int[(int)(sampleRate * seconds)];

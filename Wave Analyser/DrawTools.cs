@@ -32,6 +32,5 @@ namespace Wave_Analyser
 			line.StrokeThickness = thickness;
 			canvas.Children.Add(line);
 		}
-
 	}
 }

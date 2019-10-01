@@ -36,8 +36,8 @@ namespace Wave_Analyser
 		{
 			double bottom = 200;
 			Rectangle bar = new Rectangle();
-			bar.Stroke = Brushes.DarkGreen;
-			bar.Fill = Brushes.DarkGreen;
+			bar.Stroke = (Brush)Application.Current.FindResource("freqDomainBarBrush");
+			bar.Fill = (Brush)Application.Current.FindResource("freqDomainBarBrush");
 			bar.Width = 8;
 			bar.Height = amplitude;
 			Canvas.SetLeft(bar, frequency);
@@ -47,6 +47,7 @@ namespace Wave_Analyser
 
 		public void DrawGraph(double binSize, int maxFreq)
 		{
+            frequencyDomainGraph.Children.Clear();
 			DrawTools.DrawLine(frequencyDomainGraph, 45, 45, 200, 0, Brushes.Black);
 			for (int i = 0; i < 200; i += 20)
 			{

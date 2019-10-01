@@ -17,14 +17,26 @@
             <MenuItem Header="File"/>
         </Menu>
         <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1">
-            <StackPanel x:Name="waveformPanel" Grid.Row="1">
-
-            </StackPanel>
+            <StackPanel x:Name="waveformPanel" Grid.Row="1"/>
         </ScrollViewer>
-
         <GridSplitter VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="5" Grid.Row="2" Background="#eee"/>
-        <local:FrequencyViewer x:Name="frequencyViewer" Grid.Row="3">
-
-        </local:FrequencyViewer>
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <local:FrequencyViewer x:Name="frequencyViewer"/>
+            <Border Padding="10" Grid.Column="1" Background="{StaticResource menuBackgroundBrush}">
+                <StackPanel Grid.Column="1">
+                    <Button x:Name="compositeButton">Generate Composite Wave</Button>
+                    <Label>Frequency (Hz)</Label>
+                    <TextBox x:Name="frequencyInput"></TextBox>
+                    <Button x:Name="sineButton">Generate Sine Wave</Button>
+                    <Button x:Name="randomButton">Generate Random Wave</Button>
+                    <Button x:Name="dftButton">Apply DFT</Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+        
     </Grid>
 </Window>

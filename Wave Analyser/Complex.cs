@@ -48,8 +48,6 @@ namespace Wave_Analyser
 		{
 			return Math.Pow(real * real + imaginary * imaginary, 0.5);
 		}
-
-
 	}
 }
 

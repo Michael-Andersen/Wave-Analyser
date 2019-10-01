@@ -9,7 +9,7 @@
              Focusable="True"
              Background="Transparent">
     <Grid>
-        <Canvas  x:Name="background" Background="#FCFCFC" ClipToBounds="True" Margin="0,0,0,15"/>
+        <Canvas  x:Name="background" Background="{StaticResource freqDomainBackgroundBrush}" ClipToBounds="True" Margin="0,0,0,15"/>
         <ScrollViewer x:Name="fViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <Grid Margin="0,0,0,0">
                 <Canvas x:Name="frequencyDomainGraph" HorizontalAlignment="Left" Background="Transparent" ClipToBounds="True"/>
