@@ -11,16 +11,28 @@ namespace Wave_Analyser
 	/// </summary>
 	public partial class FrequencyViewer : UserControl
 	{
-		double[] frequencies;
+        int[] samples;
+        double[] frequencies;
+
 		public FrequencyViewer()
 		{
 			InitializeComponent();
 			Measure(new Size(1000, 1000));
 			Arrange(new Rect(0, 0, 1000, 1000));
-	
-		}
+        }
 
-		private void DrawBar(Canvas canvas, double frequency, double amplitude, double width)
+        public void Init()
+        {
+            GenerateFromFourier(samples, 2000);
+            DrawGraph(Fourier.BinSize(WaveformViewer.sampleRate, 2000), 7000);
+        }
+
+        public void SetSamples(int[] samples)
+        {
+            this.samples = samples;
+        }
+
+        private void DrawBar(Canvas canvas, double frequency, double amplitude, double width)
 		{
 			double bottom = 200;
 			Rectangle bar = new Rectangle();
@@ -32,7 +44,6 @@ namespace Wave_Analyser
 			Canvas.SetTop(bar, bottom - amplitude);
 			canvas.Children.Add(bar);
 		}
-
 
 		public void DrawGraph(double binSize, int maxFreq)
 		{

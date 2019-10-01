@@ -5,10 +5,26 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wave_Analyser"
         mc:Ignorable="d"
-        Title="MainWindow" Height="500" Width="1000">
-    <StackPanel x:Name="content">
+        Title="MainWindow" Height="800" Width="1000">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
         <Menu Background="#eee">
             <MenuItem Header="File"/>
         </Menu>
-    </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1">
+            <StackPanel x:Name="waveformPanel" Grid.Row="1">
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <GridSplitter VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="5" Grid.Row="2" Background="#eee"/>
+        <local:FrequencyViewer x:Name="frequencyViewer" Grid.Row="3">
+
+        </local:FrequencyViewer>
+    </Grid>
 </Window>

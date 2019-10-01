@@ -83,7 +83,7 @@ namespace Wave_Analyser
 			}
 		}
 
-		public int[] getSamples()
+		public int[] GetSamples()
 		{
 			return samples;
 		}
@@ -151,8 +151,7 @@ namespace Wave_Analyser
 		}
 		
 		public void GenerateSineData(double seconds, int[] freqs)
-		{
-			
+        { 	
 			samples = new int[(int)(sampleRate*seconds)];
 			for (int i = 0; i < samples.Length; i++)
 			{
