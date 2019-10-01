@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Wave_Analyser"
         mc:Ignorable="d"
         Title="MainWindow" Height="800" Width="1000">
-    <Grid>
+    <Grid Background="{StaticResource backgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -37,6 +37,5 @@
                 </StackPanel>
             </Border>
         </Grid>
-        
     </Grid>
 </Window>

@@ -28,6 +28,12 @@ namespace Wave_Analyser
 		public MainWindow()
 		{
 			InitializeComponent();
+
+            Loaded += MainWindow_Loaded;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
             waveformViewer = new WaveformViewer(SAMPLE_RATE, BIT_DEPTH);
             waveformViewer.GenerateSineData(180, new int[] { 150, 300, 1000 });
             waveformPanel.Children.Add(waveformViewer);

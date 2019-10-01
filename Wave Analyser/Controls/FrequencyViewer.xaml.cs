@@ -11,14 +11,16 @@ namespace Wave_Analyser
 	/// </summary>
 	public partial class FrequencyViewer : UserControl
 	{
-        int[] samples;
-        double[] frequencies;
+        public static readonly int PADDING = 50;
+        public static readonly int YSPACING = 20;
+        public static readonly int XSPACING = 30;
+
+        private int[] samples;
+        private double[] frequencies;
 
 		public FrequencyViewer()
 		{
 			InitializeComponent();
-			Measure(new Size(1000, 1000));
-			Arrange(new Rect(0, 0, 1000, 1000));
         }
 
         public void Init()
@@ -36,8 +38,8 @@ namespace Wave_Analyser
 		{
 			double bottom = 200;
 			Rectangle bar = new Rectangle();
-			bar.Stroke = (Brush)Application.Current.FindResource("freqDomainBarBrush");
-			bar.Fill = (Brush)Application.Current.FindResource("freqDomainBarBrush");
+			bar.Stroke = (Brush)Application.Current.FindResource("freqDomainPrimaryBrush");
+			bar.Fill = (Brush)Application.Current.FindResource("freqDomainPrimaryBrush");
 			bar.Width = 8;
 			bar.Height = amplitude;
 			Canvas.SetLeft(bar, frequency);
@@ -48,20 +50,41 @@ namespace Wave_Analyser
 		public void DrawGraph(double binSize, int maxFreq)
 		{
             frequencyDomainGraph.Children.Clear();
-			DrawTools.DrawLine(frequencyDomainGraph, 45, 45, 200, 0, Brushes.Black);
-			for (int i = 0; i < 200; i += 20)
+
+            double x = PADDING;
+            double y = PADDING;
+            double width = maxFreq * 30.0 / binSize;
+            double height = (int)ActualHeight - PADDING;
+            frequencyDomainGraph.Width = width;
+
+            //draw axis
+            DrawTools.DrawLine(frequencyDomainGraph, x, x, y, height, 
+                (Brush)Application.Current.FindResource("freqDomainPrimaryBrush"));
+            DrawTools.DrawLine(frequencyDomainGraph, x, width, height, height, 
+                (Brush)Application.Current.FindResource("freqDomainPrimaryBrush"));
+
+            //draw y axis numbers
+            for (int i = 0; i < height; i += YSPACING)
 			{
-				DrawTools.Text(frequencyDomainGraph, 0, 200 - i,"" + Math.Round(i * WaveformViewer.maxAmp / 300.0, 0), Brushes.Black);
+				DrawTools.Text(frequencyDomainGraph, 0, height - i - 10, "" + Math.Round(i * WaveformViewer.maxAmp / height, 0), 
+                    (Brush)Application.Current.FindResource("freqDomainSecondaryBrush"));
 			}
-			frequencyDomainGraph.Width = maxFreq * 30.0 / binSize;
-			for (int i = 0; i < frequencies.Length; i++)
+
+            // draw x axis numbers
+            for (int i = 0; i < frequencies.Length; i++)
 			{
-				DrawBar(frequencyDomainGraph, 50 + (i) * 30, frequencies[i] * (200.0/WaveformViewer.maxAmp), 10);
+				DrawBar(frequencyDomainGraph, 50 + (i) * 30, frequencies[i] * (200.0 / WaveformViewer.maxAmp), 10);
 				DrawTools.Text(frequencyDomainGraph, 50 + i * 30, 215, Math.Round(i * binSize, 0) + "", Brushes.Black);
 			}
-			double z = fViewer.ViewportWidth;
-			fViewer.ScrollToEnd();
 		}
+
+        public void DrawAmpText(int y)
+        {
+            TextBlock textBlock = new TextBlock();
+            textBlock.Width = PADDING;
+            textBlock.HorizontalAlignment = HorizontalAlignment.Right;
+            textBlock.Text = 
+        }
 
 		public void GenerateFromFourier(int[] samples, int N)
 		{

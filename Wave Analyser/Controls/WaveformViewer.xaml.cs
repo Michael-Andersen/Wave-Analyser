@@ -47,8 +47,6 @@ namespace Wave_Analyser
             minAmp = -maxAmp--;
 			zoom = 128;
             random = new Random();
-            Measure(new Size(1000, 1000));
-            Arrange(new Rect(0, 0, 1000, 1000));
 			timeDomainGraph.MouseWheel += MouseWheelZoom;
 			viewer.ScrollChanged += ScrollChanged;
         }
@@ -123,66 +121,30 @@ namespace Wave_Analyser
 			DrawGraph();		
 		}
 
-		private void MouseWheelZoom(Object sender, MouseWheelEventArgs e)
-		{
-			int zoomFactor = 2;
-		
-			if (e.Delta > 0)
-			{
-				if (zoom <= 1)
-				{
-					zoom = 1;
-					return; //max zoom in is not skipping any samples
-				}
-				zoom = (zoom / zoomFactor);
-				viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset * zoomFactor);
-                DrawGraph();
-			}
-			else
-			{	
-				if (zoom * zoomFactor > samples.Length / 16)
-				{
-					return; //max zoom out is only drawing 16 samples
-				}
-				zoom = (zoom * zoomFactor);
-				viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset / zoomFactor);
-                DrawGraph();
-			}
-		}
-
-		public void GenerateSineData(double seconds, int[] freqs)
-        { 	
-			samples = new int[(int)(sampleRate*seconds)];
-			for (int i = 0; i < samples.Length; i++)
-			{
-				double time = i / sampleRate;
-				samples[i] = 0;
-				for (int j = 0; j < freqs.Length; j++)
-				{
-                    double amp = (maxAmp) / freqs.Length * Math.Sin(2 * Math.PI * freqs[j] * time);
-                    samples[i] += (int)amp;
-					
-				}
-			}
-		}
-
-        public void GenerateSineTone(double seconds, double frequency)
+        private void MouseWheelZoom(Object sender, MouseWheelEventArgs e)
         {
-            samples = new int[(int)(sampleRate * seconds)];
-            for (int i = 0; i < samples.Length; i++)
+            int zoomFactor = 2;
+
+            if (e.Delta > 0)
             {
-                double time = i / sampleRate;
-                double amp = maxAmp * Math.Sin(2 * Math.PI * frequency * time);
-                samples[i] = (int)amp;
+                if (zoom <= 1)
+                {
+                    zoom = 1;
+                    return; //max zoom in is not skipping any samples
+                }
+                zoom = (zoom / zoomFactor);
+                viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset * zoomFactor);
+                DrawGraph();
             }
-        }
-
-		public void GenerateRandomSamples(double seconds)
-        {
-            samples = new int[(int)(sampleRate * seconds)];
-            for (int i = 0; i < samples.Length; i++)
+            else
             {
-                samples[i] = random.Next(minAmp, maxAmp + 1);
+                if (zoom * zoomFactor > samples.Length / 16)
+                {
+                    return; //max zoom out is only drawing 16 samples
+                }
+                zoom = (zoom * zoomFactor);
+                viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset / zoomFactor);
+                DrawGraph();
             }
         }
     }
