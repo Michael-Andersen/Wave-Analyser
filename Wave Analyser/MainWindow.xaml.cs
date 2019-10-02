@@ -31,18 +31,21 @@ namespace Wave_Analyser
 		{
 			InitializeComponent();
 
+            signal = new AudioSignal(SAMPLE_RATE, BIT_DEPTH, true);
+            activeWaveform = new WaveformViewer();
+
+            waveformPanel.Children.Add(activeWaveform);
+
             Loaded += MainWindow_Loaded;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            signal = new AudioSignal(SAMPLE_RATE, BIT_DEPTH, true);
             signal.GenerateSineData(1.0, new int[] { 100 });
-
-            activeWaveform = new WaveformViewer();
             activeWaveform.Signal = signal;
-            waveformPanel.Children.Add(activeWaveform);
+            freqDomain.Signal = signal;
             activeWaveform.DrawGraph();
+            freqDomain.Init();
 
             compositeButton.Click += CompositeButton_Click;
             sineButton.Click += SineButton_Click;

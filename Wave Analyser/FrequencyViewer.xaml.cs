@@ -19,9 +19,24 @@ namespace Wave_Analyser
         private AudioSignal signal;
         private double[] frequencies;
 
-		public FrequencyViewer()
+        private Brush freqChartBrush = (Brush)Application.Current.FindResource("freqChartBrush");
+
+        public FrequencyViewer()
 		{
 			InitializeComponent();
+
+            this.SizeChanged += FrequencyViewer_SizeChanged;
+        }
+
+        private void FrequencyViewer_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (signal == null)
+                return;
+
+            graph.Children.Clear();
+            graph.UpdateLayout();
+
+            DrawGraph(Fourier.BinSize(signal.SampleRate, 2000), 7000);
         }
 
         public void Init()
@@ -30,12 +45,14 @@ namespace Wave_Analyser
             DrawGraph(Fourier.BinSize(signal.SampleRate, 2000), 7000);
         }
 
+        public AudioSignal Signal { set => signal = value; }
+
         private void DrawBar(Canvas canvas, double frequency, double amplitude, double width)
 		{
 			double bottom = 200;
 			Rectangle bar = new Rectangle();
-			bar.Stroke = (Brush)Application.Current.FindResource("freqDomainPrimaryBrush");
-			bar.Fill = (Brush)Application.Current.FindResource("freqDomainPrimaryBrush");
+			bar.Stroke = freqChartBrush;
+			bar.Fill = freqChartBrush;
 			bar.Width = 8;
 			bar.Height = amplitude;
 			Canvas.SetLeft(bar, frequency);
@@ -45,32 +62,27 @@ namespace Wave_Analyser
 
 		public void DrawGraph(double binSize, int maxFreq)
 		{
-            frequencyDomainGraph.Children.Clear();
-
             double x = PADDING;
             double y = PADDING;
             double width = maxFreq * 30.0 / binSize;
             double height = (int)ActualHeight - PADDING;
-            frequencyDomainGraph.Width = width;
+            graph.Width = width;
 
             //draw axis
-            DrawTools.DrawLine(frequencyDomainGraph, x, x, y, height, 
-                (Brush)Application.Current.FindResource("freqDomainPrimaryBrush"));
-            DrawTools.DrawLine(frequencyDomainGraph, x, width, height, height, 
-                (Brush)Application.Current.FindResource("freqDomainPrimaryBrush"));
+            DrawTools.DrawLine(graph, x, x, y, height, freqChartBrush);
+            DrawTools.DrawLine(graph, x, width, height, height, freqChartBrush);
 
             //draw y axis numbers
             for (int i = 0; i < height; i += YSPACING)
 			{
-				DrawTools.Text(frequencyDomainGraph, 0, height - i - 10, "" + Math.Round(i * signal.MaxAmp / height, 0), 
-                    (Brush)Application.Current.FindResource("freqDomainSecondaryBrush"));
+				DrawTools.Text(graph, 0, height - i - 10, "" + Math.Round(i * signal.MaxAmp / height, 0), freqChartBrush);
 			}
 
             // draw x axis numbers
             for (int i = 0; i < frequencies.Length; i++)
 			{
-				DrawBar(frequencyDomainGraph, 50 + (i) * 30, frequencies[i] * (200.0 / signal.MaxAmp), 10);
-				DrawTools.Text(frequencyDomainGraph, 50 + i * 30, 215, Math.Round(i * binSize, 0) + "", Brushes.Black);
+				DrawBar(graph, 50 + (i) * 30, frequencies[i] * (200.0 / signal.MaxAmp), 10);
+				DrawTools.Text(graph, 50 + i * 30, 215, Math.Round(i * binSize, 0) + "", freqChartBrush);
 			}
 		}
 

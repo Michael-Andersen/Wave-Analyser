@@ -21,17 +21,20 @@ namespace Wave_Analyser
     /// </summary>
     public partial class WaveformViewer : UserControl
     {
-        public static readonly int DEFAULT_ZOOM = 128;
+        private static readonly int DEFAULT_ZOOM = 128;
 
         private AudioSignal signal;
 		private int zoom;
+
+        private Brush waveformBrush = (Brush)Application.Current.FindResource("waveformBrush");
+        private Brush zeroLineBrush = (Brush)Application.Current.FindResource("zeroLineBrush");
 
         public WaveformViewer()
         {
             InitializeComponent();
 
             zoom = DEFAULT_ZOOM;
-            timeDomainGraph.MouseWheel += MouseWheelZoom;
+            graph.MouseWheel += MouseWheelZoom;
             viewer.ScrollChanged += ScrollChanged;
         }
 
@@ -39,57 +42,52 @@ namespace Wave_Analyser
 
         public void DrawGraph()
         {
+            if (signal?.Samples == null)
+                return;
+
+            graph.Children.Clear();
+            graph.UpdateLayout();
+            timeAxis.Children.Clear();
+            timeAxis.UpdateLayout();
             DrawAxis();
             DrawWaveform();
         }
 
-		private void DrawAxis()
-		{
-			//remove old axis
-			background.Children.Clear();
-			background.UpdateLayout();
-			//draw the zero line
-			double backgroundHeight = background.ActualHeight / 2;
-			DrawTools.DrawLine(background, 0, background.ActualWidth + 20, backgroundHeight, backgroundHeight,
-				Brushes.LightSteelBlue);
-			//draw the time axis
-			DrawTools.DrawLine(background, 0, background.ActualWidth + 20,
-			background.ActualHeight - 15, background.ActualHeight - 15, Brushes.Black, 2);
-			//label times
-			for (int i = 0; i < background.ActualWidth + 20; i += 80)
-			{
-				double timeDisplay = Math.Round((i + viewer.HorizontalOffset) * zoom / signal.SampleRate, 3);
-				DrawTools.DrawLine(background, i, i + 0.5, background.ActualHeight - 10, background.ActualHeight - 15,
-					Brushes.Black);
-				DrawTools.Text(background, i, background.ActualHeight - 15,
-					"" + timeDisplay,
-					Brushes.Black);
-			}
-		}
-
-		public void DrawWaveform()
+        private void DrawAxis()
         {
-            if (signal?.Samples == null)
-                return;
+            //draw the zero line
+            double y = graph.ActualHeight / 2;
+            DrawTools.DrawLine(graph, viewer.HorizontalOffset, viewer.HorizontalOffset + viewer.ActualWidth, y, y, zeroLineBrush);
 
-            //remove old waveform
-            timeDomainGraph.Children.Clear();
-            timeDomainGraph.UpdateLayout();
+            //draw the time axis
+            DrawTools.DrawLine(timeAxis, viewer.HorizontalOffset, viewer.HorizontalOffset + viewer.ActualWidth, 0, 0, waveformBrush, 2);
+
+            //label times
+            for (int i = 0; i < viewer.ActualWidth + 20; i += 80)
+            {
+                double timeDisplay = Math.Round((i + viewer.HorizontalOffset) * zoom / signal.SampleRate, 3);
+                DrawTools.DrawLine(timeAxis, viewer.HorizontalOffset + i, viewer.HorizontalOffset + i + 0.5, 0, 5, waveformBrush);
+                DrawTools.Text(timeAxis, viewer.HorizontalOffset + i, 0, "" + timeDisplay, waveformBrush);
+            }
+        }
+
+        public void DrawWaveform()
+        {
 			int spaces = zoom;
-			timeDomainGraph.Width = (signal.Samples.Length / spaces > background.ActualWidth) ? 
-				signal.Samples.Length  / spaces : background.ActualWidth;	
+            graph.Width = (signal.Samples.Length / spaces > viewer.ActualWidth) ? 
+				signal.Samples.Length  / spaces : viewer.ActualWidth;	
 			
 			int xpos = (int) viewer.HorizontalOffset;
             for (int i = (int)viewer.HorizontalOffset; i < signal.Samples.Length - spaces; i += spaces)
             {
-				if (xpos - viewer.HorizontalOffset >= background.ActualWidth)
+				if (xpos - viewer.HorizontalOffset >= viewer.ActualWidth)
 				{
 					break; //stop drawing when out of view
 				}
 
                 double y1 = GetSampleY(signal.Samples[i]);
 			    double y2 = GetSampleY(signal.Samples[i + spaces]);
-                DrawTools.DrawLine(timeDomainGraph, xpos, (xpos + 1), y1, y2, Brushes.SteelBlue);
+                DrawTools.DrawLine(graph, xpos, (xpos + 1), y1, y2, waveformBrush);
 				xpos++;
             }			
         }
@@ -98,7 +96,7 @@ namespace Wave_Analyser
         {
             if (signal.Signed)
             {
-                return ((double)(sample - signal.MinAmp) / (signal.MaxAmp - signal.MinAmp)) * background.ActualHeight;
+                return ((double)(sample - signal.MinAmp) / (signal.MaxAmp - signal.MinAmp)) * graph.ActualHeight;
             }
 
             return 0.0;

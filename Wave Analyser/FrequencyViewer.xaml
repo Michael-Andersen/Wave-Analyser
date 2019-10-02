@@ -8,9 +8,9 @@
              d:DesignWidth="1000" d:DesignHeight="300"
              Focusable="True"
              Background="Transparent">
-    <Grid Background="{StaticResource freqDomainBackgroundBrush}">
+    <Grid Background="{StaticResource freqBgBrush}">
         <Grid Margin="0,0,0,0">
-            <Canvas x:Name="frequencyDomainGraph" HorizontalAlignment="Left" ClipToBounds="True"/>
+            <Canvas x:Name="graph" HorizontalAlignment="Left" ClipToBounds="True"/>
         </Grid>
     </Grid>
 </UserControl>

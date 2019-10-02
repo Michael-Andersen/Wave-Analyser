@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Wave_Analyser"
         mc:Ignorable="d"
         Title="MainWindow" Height="800" Width="1000">
-    <Grid Background="{StaticResource backgroundBrush}">
+    <Grid Background="{StaticResource bgBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -25,8 +25,8 @@
                 <ColumnDefinition Width="3*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <local:FrequencyViewer x:Name="frequencyViewer"/>
-            <Border Padding="10" Grid.Column="1" Background="{StaticResource menuBackgroundBrush}">
+            <local:FrequencyViewer x:Name="freqDomain"/>
+            <Border Padding="10" Grid.Column="1" Background="{StaticResource menuBgBrush}">
                 <StackPanel Grid.Column="1">
                     <Button x:Name="compositeButton">Generate Composite Wave</Button>
                     <Label>Frequency (Hz)</Label>
