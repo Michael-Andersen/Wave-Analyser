@@ -170,7 +170,7 @@ namespace Wave_Analyser
 				samples.Length  / spaces : background.ActualWidth;	
 			
 			int xpos = (int) viewer.HorizontalOffset;
-            for (int i = (int)viewer.HorizontalOffset; i < samples.Length - spaces; i += spaces)
+            for (int i = (int)viewer.HorizontalOffset * spaces; i < samples.Length - spaces; i += spaces)
             {
 				if (xpos - viewer.HorizontalOffset >= background.ActualWidth)
 				{
