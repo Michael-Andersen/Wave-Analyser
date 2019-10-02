@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Wave_Analyser.Classes;
 
 namespace Wave_Analyser
 {
@@ -20,36 +21,21 @@ namespace Wave_Analyser
     /// </summary>
     public partial class WaveformViewer : UserControl
     {
-        public static double sampleRate;
-        private int bitDepth;
-        public static int maxAmp;
-        private int minAmp;
-		private int zoom;
-        private int[] samples;
-        private Random random;
+        public static readonly int DEFAULT_ZOOM = 128;
 
-        public WaveformViewer(double sampleRate, int bitDepth)
-        {   
-            Init(sampleRate, bitDepth);
-        }
+        private AudioSignal signal;
+		private int zoom;
 
         public WaveformViewer()
         {
-            Init(44100, 16);
+            InitializeComponent();
+
+            zoom = DEFAULT_ZOOM;
+            timeDomainGraph.MouseWheel += MouseWheelZoom;
+            viewer.ScrollChanged += ScrollChanged;
         }
 
-        public void Init(double sampleRate, int bitDepth)
-        {
-            InitializeComponent();
-            WaveformViewer.sampleRate = sampleRate;
-            this.bitDepth = bitDepth;
-            maxAmp = (int)Math.Pow(2, bitDepth - 1);
-            minAmp = -maxAmp--;
-			zoom = 128;
-            random = new Random();
-			timeDomainGraph.MouseWheel += MouseWheelZoom;
-			viewer.ScrollChanged += ScrollChanged;
-        }
+        public AudioSignal Signal { set => signal = value; }
 
         public void DrawGraph()
         {
@@ -72,7 +58,7 @@ namespace Wave_Analyser
 			//label times
 			for (int i = 0; i < background.ActualWidth + 20; i += 80)
 			{
-				double timeDisplay = Math.Round((i + viewer.HorizontalOffset) * zoom / sampleRate, 3);
+				double timeDisplay = Math.Round((i + viewer.HorizontalOffset) * zoom / signal.SampleRate, 3);
 				DrawTools.DrawLine(background, i, i + 0.5, background.ActualHeight - 10, background.ActualHeight - 15,
 					Brushes.Black);
 				DrawTools.Text(background, i, background.ActualHeight - 15,
@@ -81,31 +67,28 @@ namespace Wave_Analyser
 			}
 		}
 
-		public int[] GetSamples()
-		{
-			return samples;
-		}
-
 		public void DrawWaveform()
         {
-            if (samples == null) return;
+            if (signal?.Samples == null)
+                return;
+
             //remove old waveform
             timeDomainGraph.Children.Clear();
             timeDomainGraph.UpdateLayout();
 			int spaces = zoom;
-			timeDomainGraph.Width = (samples.Length / spaces > background.ActualWidth) ? 
-				samples.Length  / spaces : background.ActualWidth;	
+			timeDomainGraph.Width = (signal.Samples.Length / spaces > background.ActualWidth) ? 
+				signal.Samples.Length  / spaces : background.ActualWidth;	
 			
 			int xpos = (int) viewer.HorizontalOffset;
-            for (int i = (int)viewer.HorizontalOffset; i < samples.Length - spaces; i += spaces)
+            for (int i = (int)viewer.HorizontalOffset; i < signal.Samples.Length - spaces; i += spaces)
             {
 				if (xpos - viewer.HorizontalOffset >= background.ActualWidth)
 				{
 					break; //stop drawing when out of view
 				}
 				
-				double y1 = ((double)(samples[i] - minAmp) / (maxAmp - minAmp)) * background.ActualHeight;
-			    double y2 = ((double)(samples[i + spaces] - minAmp) / (maxAmp - minAmp)) * background.ActualHeight;
+				double y1 = ((double)(signal.Samples[i] - signal.MinAmp) / (signal.MaxAmp - signal.MinAmp)) * background.ActualHeight;
+			    double y2 = ((double)(signal.Samples[i + spaces] - signal.MinAmp) / (signal.MaxAmp - signal.MinAmp)) * background.ActualHeight;
                 DrawTools.DrawLine(timeDomainGraph,
                     xpos,
                     (xpos + 1),
@@ -130,7 +113,7 @@ namespace Wave_Analyser
                 if (zoom <= 1)
                 {
                     zoom = 1;
-                    return; //max zoom in is not skipping any samples
+                    return; //max zoom in is not skipping any signal.Samples
                 }
                 zoom = (zoom / zoomFactor);
                 viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset * zoomFactor);
@@ -138,9 +121,9 @@ namespace Wave_Analyser
             }
             else
             {
-                if (zoom * zoomFactor > samples.Length / 16)
+                if (zoom * zoomFactor > signal.Samples.Length / 16)
                 {
-                    return; //max zoom out is only drawing 16 samples
+                    return; //max zoom out is only drawing 16 signal.Samples
                 }
                 zoom = (zoom * zoomFactor);
                 viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset / zoomFactor);

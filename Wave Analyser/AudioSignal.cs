@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Wave_Analyser.Classes
 {
-    class AudioSignal
+    public class AudioSignal
     {
         private double sampleRate;
         private int bitDepth;
@@ -26,10 +26,11 @@ namespace Wave_Analyser.Classes
             this.random = new Random();
         }
 
-        public double SampleRate { get; }
-        public int MaxAmp { get; }
-        public bool Signed { get;  }
-        public int[] Samples { get; }
+        public double SampleRate { get => sampleRate; }
+        public int MaxAmp { get => maxAmp; }
+        public int MinAmp { get => minAmp; }
+        public bool Signed { get => signed; }
+        public int[] Samples { get => samples; }
 
         public void GenerateSineData(double seconds, int[] freqs)
         {

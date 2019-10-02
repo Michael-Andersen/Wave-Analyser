@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Wave_Analyser.Classes;
 
 namespace Wave_Analyser
 {
@@ -23,7 +24,8 @@ namespace Wave_Analyser
         public readonly double SAMPLE_RATE = 44100.0;
         public readonly int BIT_DEPTH = 16;
 
-        private WaveformViewer waveformViewer;
+        private WaveformViewer activeWaveform;
+        private AudioSignal signal;
 
 		public MainWindow()
 		{
@@ -34,12 +36,13 @@ namespace Wave_Analyser
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            waveformViewer = new WaveformViewer(SAMPLE_RATE, BIT_DEPTH);
-            waveformViewer.GenerateSineData(180, new int[] { 150, 300, 1000 });
-            waveformPanel.Children.Add(waveformViewer);
-            waveformViewer.DrawGraph();
-            frequencyViewer.SetSamples(waveformViewer.GetSamples());
-            frequencyViewer.Init();
+            signal = new AudioSignal(SAMPLE_RATE, BIT_DEPTH, true);
+            signal.GenerateSineData(1.0, new int[] { 100 });
+
+            activeWaveform = new WaveformViewer();
+            activeWaveform.Signal = signal;
+            waveformPanel.Children.Add(activeWaveform);
+            activeWaveform.DrawGraph();
 
             compositeButton.Click += CompositeButton_Click;
             sineButton.Click += SineButton_Click;
@@ -49,27 +52,22 @@ namespace Wave_Analyser
 
         private void RandomButton_Click(object sender, RoutedEventArgs e)
         {
-            waveformViewer.GenerateRandomSamples(180);
-            waveformViewer.DrawGraph();
+            
         }
 
         private void SineButton_Click(object sender, RoutedEventArgs e)
         {
-            int frequency = int.Parse(frequencyInput.Text);
-            waveformViewer.GenerateSineTone(180, frequency);
-            waveformViewer.DrawGraph();
+           
         }
 
         private void CompositeButton_Click(object sender, RoutedEventArgs e)
         {
-            waveformViewer.GenerateSineData(180, new int[] { 150, 300, 1000 });
-            waveformViewer.DrawGraph();
+           
         }
 
         private void DftButton_Click(object sender, RoutedEventArgs e)
         {
-            frequencyViewer.SetSamples(waveformViewer.GetSamples());
-            frequencyViewer.Init();
+            
         }
     }
 }

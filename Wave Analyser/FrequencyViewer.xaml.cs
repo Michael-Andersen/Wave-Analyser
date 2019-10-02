@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Wave_Analyser.Classes;
 
 namespace Wave_Analyser
 {
@@ -15,7 +16,7 @@ namespace Wave_Analyser
         public static readonly int YSPACING = 20;
         public static readonly int XSPACING = 30;
 
-        private int[] samples;
+        private AudioSignal signal;
         private double[] frequencies;
 
 		public FrequencyViewer()
@@ -25,13 +26,8 @@ namespace Wave_Analyser
 
         public void Init()
         {
-            GenerateFromFourier(samples, 2000);
-            DrawGraph(Fourier.BinSize(WaveformViewer.sampleRate, 2000), 7000);
-        }
-
-        public void SetSamples(int[] samples)
-        {
-            this.samples = samples;
+            GenerateFromFourier(signal.Samples, 2000);
+            DrawGraph(Fourier.BinSize(signal.SampleRate, 2000), 7000);
         }
 
         private void DrawBar(Canvas canvas, double frequency, double amplitude, double width)
@@ -66,14 +62,14 @@ namespace Wave_Analyser
             //draw y axis numbers
             for (int i = 0; i < height; i += YSPACING)
 			{
-				DrawTools.Text(frequencyDomainGraph, 0, height - i - 10, "" + Math.Round(i * WaveformViewer.maxAmp / height, 0), 
+				DrawTools.Text(frequencyDomainGraph, 0, height - i - 10, "" + Math.Round(i * signal.MaxAmp / height, 0), 
                     (Brush)Application.Current.FindResource("freqDomainSecondaryBrush"));
 			}
 
             // draw x axis numbers
             for (int i = 0; i < frequencies.Length; i++)
 			{
-				DrawBar(frequencyDomainGraph, 50 + (i) * 30, frequencies[i] * (200.0 / WaveformViewer.maxAmp), 10);
+				DrawBar(frequencyDomainGraph, 50 + (i) * 30, frequencies[i] * (200.0 / signal.MaxAmp), 10);
 				DrawTools.Text(frequencyDomainGraph, 50 + i * 30, 215, Math.Round(i * binSize, 0) + "", Brushes.Black);
 			}
 		}
@@ -83,7 +79,6 @@ namespace Wave_Analyser
             TextBlock textBlock = new TextBlock();
             textBlock.Width = PADDING;
             textBlock.HorizontalAlignment = HorizontalAlignment.Right;
-            textBlock.Text = 
         }
 
 		public void GenerateFromFourier(int[] samples, int N)
