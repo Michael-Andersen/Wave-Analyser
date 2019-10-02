@@ -86,17 +86,22 @@ namespace Wave_Analyser
 				{
 					break; //stop drawing when out of view
 				}
-				
-				double y1 = ((double)(signal.Samples[i] - signal.MinAmp) / (signal.MaxAmp - signal.MinAmp)) * background.ActualHeight;
-			    double y2 = ((double)(signal.Samples[i + spaces] - signal.MinAmp) / (signal.MaxAmp - signal.MinAmp)) * background.ActualHeight;
-                DrawTools.DrawLine(timeDomainGraph,
-                    xpos,
-                    (xpos + 1),
-                    y1,
-                    y2,
-                    Brushes.SteelBlue);
+
+                double y1 = GetSampleY(signal.Samples[i]);
+			    double y2 = GetSampleY(signal.Samples[i + spaces]);
+                DrawTools.DrawLine(timeDomainGraph, xpos, (xpos + 1), y1, y2, Brushes.SteelBlue);
 				xpos++;
             }			
+        }
+
+        private double GetSampleY(int sample)
+        {
+            if (signal.Signed)
+            {
+                return ((double)(sample - signal.MinAmp) / (signal.MaxAmp - signal.MinAmp)) * background.ActualHeight;
+            }
+
+            return 0.0;
         }
 
 		private void ScrollChanged(Object sender, ScrollChangedEventArgs e)
