@@ -9,8 +9,8 @@
              Focusable="True"
              Background="Transparent">
     <Grid Background="{StaticResource freqBgBrush}">
-        <Grid Margin="0,0,0,0">
-            <Canvas x:Name="graph" HorizontalAlignment="Left" ClipToBounds="True"/>
-        </Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
+            <Canvas x:Name="freqGraph" ClipToBounds="True"/>
+        </ScrollViewer>
     </Grid>
 </UserControl>

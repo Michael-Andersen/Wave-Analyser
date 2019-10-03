@@ -13,8 +13,8 @@ namespace Wave_Analyser
 	public partial class FrequencyViewer : UserControl
 	{
         public static readonly int PADDING = 50;
-        public static readonly int YSPACING = 20;
-        public static readonly int XSPACING = 30;
+        public static readonly int Y_GAP = 30;
+        public static readonly int X_GAP = 30;
 
         private AudioSignal signal;
         private double[] frequencies;
@@ -33,57 +33,47 @@ namespace Wave_Analyser
             if (signal == null)
                 return;
 
-            graph.Children.Clear();
-            graph.UpdateLayout();
+            freqGraph.Children.Clear();
+            freqGraph.UpdateLayout();
 
-            DrawGraph(Fourier.BinSize(signal.SampleRate, 2000), 7000);
+            DrawfreqGraph(Fourier.BinSize(signal.SampleRate, 2000), 7000);
         }
 
         public void Init()
         {
             GenerateFromFourier(signal.Samples, 2000);
-            DrawGraph(Fourier.BinSize(signal.SampleRate, 2000), 7000);
+            DrawfreqGraph(Fourier.BinSize(signal.SampleRate, 2000), 7000);
         }
 
         public AudioSignal Signal { set => signal = value; }
 
-        private void DrawBar(Canvas canvas, double frequency, double amplitude, double width)
+		public void DrawfreqGraph(double binSize, int maxFreq)
 		{
-			double bottom = 200;
-			Rectangle bar = new Rectangle();
-			bar.Stroke = freqChartBrush;
-			bar.Fill = freqChartBrush;
-			bar.Width = 8;
-			bar.Height = amplitude;
-			Canvas.SetLeft(bar, frequency);
-			Canvas.SetTop(bar, bottom - amplitude);
-			canvas.Children.Add(bar);
-		}
+            double left = PADDING;
+            double top = PADDING;
+            double width = maxFreq * X_GAP / binSize;
+            double height = (int)ActualHeight - (PADDING * 2);
+            double right = left + width;
+            double bottom = top + height;
 
-		public void DrawGraph(double binSize, int maxFreq)
-		{
-            double x = PADDING;
-            double y = PADDING;
-            double width = maxFreq * 30.0 / binSize;
-            double height = (int)ActualHeight - PADDING;
-            graph.Width = width;
+            freqGraph.Width = width;
 
             //draw axis
-            DrawTools.DrawLine(graph, x, x, y, height, freqChartBrush);
-            DrawTools.DrawLine(graph, x, width, height, height, freqChartBrush);
+            DrawTools.DrawLine(freqGraph, left, left, top, bottom, freqChartBrush);
+            DrawTools.DrawLine(freqGraph, left, right, bottom, bottom, freqChartBrush);
 
             //draw y axis numbers
-            for (int i = 0; i < height; i += YSPACING)
+            for (int i = 0; i < height + Y_GAP; i += Y_GAP)
 			{
-				DrawTools.Text(graph, 0, height - i - 10, "" + Math.Round(i * signal.MaxAmp / height, 0), freqChartBrush);
+				DrawTools.Text(freqGraph, 0, bottom - i, "" + Math.Round(i * signal.MaxAmp / height, 0), freqChartBrush);
 			}
 
             // draw x axis numbers
             for (int i = 0; i < frequencies.Length; i++)
 			{
-				DrawBar(graph, 50 + (i) * 30, frequencies[i] * (200.0 / signal.MaxAmp), 10);
-				DrawTools.Text(graph, 50 + i * 30, 215, Math.Round(i * binSize, 0) + "", freqChartBrush);
-			}
+                DrawTools.DrawBar(freqGraph, left + i * X_GAP, bottom, 8, frequencies[i] * (height / signal.MaxAmp), freqChartBrush);
+                DrawTools.Text(freqGraph, left + i * X_GAP, bottom, Math.Round(i * binSize, 0) + "", freqChartBrush);
+            }
 		}
 
         public void DrawAmpText(int y)
@@ -101,7 +91,6 @@ namespace Wave_Analyser
 			{
 				frequencies[i] = fourierResults[i].VectorLength();
 			}
-
 		}
 
 		public void GenerateFreqData()

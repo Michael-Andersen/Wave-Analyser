@@ -15,7 +15,7 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="15"/>
                 </Grid.RowDefinitions>
-                <Canvas x:Name="graph" Background="{StaticResource waveformBgBrush}" ClipToBounds="True"/>
+                <Canvas x:Name="timeGraph" Background="{StaticResource waveformBgBrush}" ClipToBounds="True"/>
                 <Canvas x:Name="timeAxis" Background="{StaticResource waveformBgBrush}" ClipToBounds="True" Grid.Row="1"/>
             </Grid>
         </ScrollViewer>

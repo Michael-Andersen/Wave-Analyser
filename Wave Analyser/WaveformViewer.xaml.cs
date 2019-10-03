@@ -34,7 +34,7 @@ namespace Wave_Analyser
             InitializeComponent();
 
             zoom = DEFAULT_ZOOM;
-            graph.MouseWheel += MouseWheelZoom;
+            timeGraph.MouseWheel += MouseWheelZoom;
             viewer.ScrollChanged += ScrollChanged;
         }
 
@@ -45,8 +45,8 @@ namespace Wave_Analyser
             if (signal?.Samples == null)
                 return;
 
-            graph.Children.Clear();
-            graph.UpdateLayout();
+            timeGraph.Children.Clear();
+            timeGraph.UpdateLayout();
             timeAxis.Children.Clear();
             timeAxis.UpdateLayout();
             DrawAxis();
@@ -56,8 +56,8 @@ namespace Wave_Analyser
         private void DrawAxis()
         {
             //draw the zero line
-            double y = graph.ActualHeight / 2;
-            DrawTools.DrawLine(graph, viewer.HorizontalOffset, viewer.HorizontalOffset + viewer.ActualWidth, y, y, zeroLineBrush);
+            double y = timeGraph.ActualHeight / 2;
+            DrawTools.DrawLine(timeGraph, viewer.HorizontalOffset, viewer.HorizontalOffset + viewer.ActualWidth, y, y, zeroLineBrush);
 
             //draw the time axis
             DrawTools.DrawLine(timeAxis, viewer.HorizontalOffset, viewer.HorizontalOffset + viewer.ActualWidth, 0, 0, waveformBrush, 2);
@@ -74,7 +74,7 @@ namespace Wave_Analyser
         public void DrawWaveform()
         {
 			int spaces = zoom;
-            graph.Width = (signal.Samples.Length / spaces > viewer.ActualWidth) ? 
+            timeGraph.Width = (signal.Samples.Length / spaces > viewer.ActualWidth) ? 
 				signal.Samples.Length  / spaces : viewer.ActualWidth;	
 			
 			int xpos = (int) viewer.HorizontalOffset;
@@ -87,7 +87,7 @@ namespace Wave_Analyser
 
                 double y1 = GetSampleY(signal.Samples[i]);
 			    double y2 = GetSampleY(signal.Samples[i + spaces]);
-                DrawTools.DrawLine(graph, xpos, (xpos + 1), y1, y2, waveformBrush);
+                DrawTools.DrawLine(timeGraph, xpos, (xpos + 1), y1, y2, waveformBrush);
 				xpos++;
             }			
         }
@@ -96,7 +96,7 @@ namespace Wave_Analyser
         {
             if (signal.Signed)
             {
-                return ((double)(sample - signal.MinAmp) / (signal.MaxAmp - signal.MinAmp)) * graph.ActualHeight;
+                return ((double)(sample - signal.MinAmp) / (signal.MaxAmp - signal.MinAmp)) * timeGraph.ActualHeight;
             }
 
             return 0.0;
