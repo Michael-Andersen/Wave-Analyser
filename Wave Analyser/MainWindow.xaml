@@ -5,11 +5,37 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wave_Analyser"
         mc:Ignorable="d"
-        Title="MainWindow" Height="500" Width="1000">
-    <StackPanel x:Name="content">
+        Title="MainWindow" Height="800" Width="1000">
+    <Grid Background="{StaticResource bgBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
         <Menu Background="#eee">
             <MenuItem Header="File"/>
         </Menu>
-        <Button Content="Button" Click="Fourier_Click"/>
-    </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1">
+            <StackPanel x:Name="waveformPanel" Grid.Row="1"/>
+        </ScrollViewer>
+        <GridSplitter VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="5" Grid.Row="2" Background="#eee"/>
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <local:FrequencyViewer x:Name="freqDomain"/>
+            <Border Padding="10" Grid.Column="1" Background="{StaticResource menuBgBrush}">
+                <StackPanel Grid.Column="1">
+                    <Button x:Name="compositeButton">Generate Composite Wave</Button>
+                    <Label>Frequency (Hz)</Label>
+                    <TextBox x:Name="frequencyInput"></TextBox>
+                    <Button x:Name="sineButton">Generate Sine Wave</Button>
+                    <Button x:Name="randomButton">Generate Random Wave</Button>
+                    <Button x:Name="dftButton">Apply DFT</Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
 </Window>

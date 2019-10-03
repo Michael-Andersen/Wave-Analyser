@@ -4,6 +4,12 @@
              xmlns:local="clr-namespace:Wave_Analyser"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <SolidColorBrush x:Key="bgBrush" Color="#FF636363"/>
+        <SolidColorBrush x:Key="menuBgBrush" Color="#EEE"/>
+        <SolidColorBrush x:Key="waveformBrush" Color="#FFF5BC42"/>
+        <SolidColorBrush x:Key="waveformBgBrush" Color="#FF3C3C3C"/>
+        <SolidColorBrush x:Key="zeroLineBrush" Color="#FFFF8484"/>
+        <SolidColorBrush x:Key="freqChartBrush" Color="#FFF5BC42"/>
+        <SolidColorBrush x:Key="freqBgBrush" Color="#FF3C3C3C"/>
     </Application.Resources>
 </Application>

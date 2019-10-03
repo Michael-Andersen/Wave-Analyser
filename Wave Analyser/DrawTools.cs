@@ -33,5 +33,16 @@ namespace Wave_Analyser
 			canvas.Children.Add(line);
 		}
 
-	}
+        public static void DrawBar(Canvas canvas, double left, double bottom, double width, double height, Brush color)
+        {
+            Rectangle bar = new Rectangle();
+            bar.Stroke = color;
+            bar.Fill = color;
+            bar.Width = width;
+            bar.Height = height;
+            Canvas.SetLeft(bar, left);
+            Canvas.SetTop(bar, bottom - height);
+            canvas.Children.Add(bar);
+        }
+    }
 }

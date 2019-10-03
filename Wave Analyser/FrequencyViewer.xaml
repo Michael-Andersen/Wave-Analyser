@@ -5,15 +5,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Wave_Analyser"
              mc:Ignorable="d" 
-             d:DesignWidth="1000" Height="300"
+             d:DesignWidth="1000" d:DesignHeight="300"
              Focusable="True"
              Background="Transparent">
-    <Grid>
-        <Canvas  x:Name="background" Background="#FCFCFC" ClipToBounds="True" Margin="0,0,0,15"/>
-        <ScrollViewer x:Name="fViewer" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Visible">
-            <Grid Margin="0,0,0,0">
-                <Canvas x:Name="frequencyDomainGraph" HorizontalAlignment="Left" Background="Transparent" ClipToBounds="True"/>
-            </Grid>
+    <Grid Background="{StaticResource freqBgBrush}">
+        <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
+            <Canvas x:Name="freqGraph" ClipToBounds="True"/>
         </ScrollViewer>
     </Grid>
 </UserControl>

@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Wave_Analyser.Classes;
 
 namespace Wave_Analyser
 {
@@ -20,44 +21,32 @@ namespace Wave_Analyser
     /// </summary>
     public partial class WaveformViewer : UserControl
     {
-        public static double sampleRate;
-        private int bitDepth;
-        public static int maxAmp;
-        private int minAmp;
+        private static readonly int DEFAULT_ZOOM = 128;
+
+        private AudioSignal signal;
 		private int zoom;
-        private int[] samples;
-        private Random random;
 		private int selectStart;
 		private int selectEnd;
 		bool mouseDown = false;
 		Point mouseDownPos;
 
-		public WaveformViewer(double sampleRate, int bitDepth)
-        {   
-            Init(sampleRate, bitDepth);
-        }
+        private Brush waveformBrush = (Brush)Application.Current.FindResource("waveformBrush");
+        private Brush zeroLineBrush = (Brush)Application.Current.FindResource("zeroLineBrush");
 
         public WaveformViewer()
         {
-            Init(44100, 16);
-        }
-
-        public void Init(double sampleRate, int bitDepth)
-        {
             InitializeComponent();
-            WaveformViewer.sampleRate = sampleRate;
-            this.bitDepth = bitDepth;
-            maxAmp = (int)Math.Pow(2, bitDepth - 1);
-            minAmp = -maxAmp--;
-			zoom = 128;
-            random = new Random();
-            Measure(new Size(1000, 1000));
-            Arrange(new Rect(0, 0, 1000, 1000));
-			timeDomainGraph.MouseWheel += MouseWheelZoom;
-			viewer.ScrollChanged += ScrollChanged;
+
+            zoom = DEFAULT_ZOOM;
+            timeGraph.MouseWheel += MouseWheelZoom;
+            viewer.ScrollChanged += ScrollChanged;
         }
 
-		private void Grid_MouseDown(object sender, MouseButtonEventArgs e)
+        public AudioSignal Signal { set => signal = value; }
+        public int SelectStart { get => selectStart; }
+        public int SelectEnd { get => selectEnd; }
+
+        private void Grid_MouseDown(object sender, MouseButtonEventArgs e)
 		{
 			mouseDown = true;
 			mouseDownPos = e.GetPosition(theGrid);
@@ -66,7 +55,7 @@ namespace Wave_Analyser
 			Canvas.SetLeft(selectionBox, mouseDownPos.X);
 			Canvas.SetTop(selectionBox, mouseDownPos.Y);
 			selectionBox.Width = 0;
-			selectionBox.Height = timeDomainGraph.ActualHeight;
+			selectionBox.Height = timeGraph.ActualHeight;
 
 			selectionBox.Visibility = Visibility.Visible;
 		}
@@ -76,31 +65,18 @@ namespace Wave_Analyser
 			mouseDown = false;
 			theGrid.ReleaseMouseCapture();
 
-
 			selectionBox.Opacity = 0.2;
 			selectionBox.Fill = Brushes.PaleVioletRed;
 			Point mouseUpPos = e.GetPosition(theGrid);
 			if (mouseUpPos.X > mouseDownPos.X)
 			{
 				selectStart = (int) mouseDownPos.X * zoom ;
-				selectEnd = (int) mouseUpPos.X *zoom ;
+				selectEnd = (int) mouseUpPos.X * zoom ;
 			} else
 			{
 				selectStart = (int) mouseUpPos.X * zoom;
 				selectEnd = (int) mouseDownPos.X * zoom;
-				
 			}
-		
-		}
-
-		public int getSelectStart()
-		{
-			return selectStart;
-		}
-
-		public int getSelectEnd()
-		{
-			return selectEnd;
 		}
 
 		private void Grid_MouseMove(object sender, MouseEventArgs e)
@@ -123,70 +99,67 @@ namespace Wave_Analyser
 				
 			}
 		}
-
-				public void DrawGraph()
+        public void DrawGraph()
         {
+            if (signal?.Samples == null)
+                return;
+
+            timeGraph.Children.Clear();
+            timeGraph.UpdateLayout();
+            timeAxis.Children.Clear();
+            timeAxis.UpdateLayout();
             DrawAxis();
             DrawWaveform();
         }
 
-		private void DrawAxis()
-		{
-			//remove old axis
-			background.Children.Clear();
-			background.UpdateLayout();
-			//draw the zero line
-			double backgroundHeight = background.ActualHeight / 2;
-			DrawTools.DrawLine(background, 0, background.ActualWidth + 20, backgroundHeight, backgroundHeight,
-				Brushes.LightSteelBlue);
-			//draw the time axis
-			DrawTools.DrawLine(background, 0, background.ActualWidth + 20,
-			background.ActualHeight - 15, background.ActualHeight - 15, Brushes.Black, 2);
-			//label times
-			for (int i = 0; i < background.ActualWidth + 20; i += 80)
-			{
-				double timeDisplay = Math.Round((i + viewer.HorizontalOffset) * zoom / sampleRate, 3);
-				DrawTools.DrawLine(background, i, i + 0.5, background.ActualHeight - 10, background.ActualHeight - 15,
-					Brushes.Black);
-				DrawTools.Text(background, i, background.ActualHeight - 15,
-					"" + timeDisplay,
-					Brushes.Black);
-			}
-		}
-
-		public int[] getSamples()
-		{
-			return samples;
-		}
-
-		public void DrawWaveform()
+        private void DrawAxis()
         {
-            if (samples == null) return;
-            //remove old waveform
-            timeDomainGraph.Children.Clear();
-            timeDomainGraph.UpdateLayout();
+            //draw the zero line
+            double y = timeGraph.ActualHeight / 2;
+            DrawTools.DrawLine(timeGraph, viewer.HorizontalOffset, viewer.HorizontalOffset + viewer.ActualWidth, y, y, zeroLineBrush);
+
+            //draw the time axis
+            DrawTools.DrawLine(timeAxis, viewer.HorizontalOffset, viewer.HorizontalOffset + viewer.ActualWidth, 0, 0, waveformBrush, 2);
+
+            //label times
+            for (int i = 0; i < viewer.ActualWidth + 20; i += 80)
+            {
+                double timeDisplay = Math.Round((i + viewer.HorizontalOffset) * zoom / signal.SampleRate, 3);
+                DrawTools.DrawLine(timeAxis, viewer.HorizontalOffset + i, viewer.HorizontalOffset + i + 0.5, 0, 5, waveformBrush);
+                DrawTools.Text(timeAxis, viewer.HorizontalOffset + i, 0, "" + timeDisplay, waveformBrush);
+            }
+        }
+
+        public void DrawWaveform()
+        {
 			int spaces = zoom;
-			timeDomainGraph.Width = (samples.Length / spaces > background.ActualWidth) ? 
-				samples.Length  / spaces : background.ActualWidth;	
+            timeGraph.Width = (signal.Samples.Length / spaces > viewer.ActualWidth) ? 
+				signal.Samples.Length  / spaces : viewer.ActualWidth;	
 			
 			int xpos = (int) viewer.HorizontalOffset;
-            for (int i = (int)viewer.HorizontalOffset * spaces; i < samples.Length - spaces; i += spaces)
+
+            for (int i = (int)viewer.HorizontalOffset; i < signal.Samples.Length - spaces; i += spaces)
             {
-				if (xpos - viewer.HorizontalOffset >= background.ActualWidth)
+				if (xpos - viewer.HorizontalOffset >= viewer.ActualWidth)
 				{
 					break; //stop drawing when out of view
 				}
-				
-				double y1 = ((double)(samples[i] - minAmp) / (maxAmp - minAmp)) * background.ActualHeight;
-			    double y2 = ((double)(samples[i + spaces] - minAmp) / (maxAmp - minAmp)) * background.ActualHeight;
-                DrawTools.DrawLine(timeDomainGraph,
-                    xpos,
-                    (xpos + 1),
-                    y1,
-                    y2,
-                    Brushes.SteelBlue);
+
+                double y1 = GetSampleY(signal.Samples[i]);
+			    double y2 = GetSampleY(signal.Samples[i + spaces]);
+                DrawTools.DrawLine(timeGraph, xpos, (xpos + 1), y1, y2, waveformBrush);
 				xpos++;
             }			
+        }
+
+        private double GetSampleY(int sample)
+        {
+            if (signal.Signed)
+            {
+                return ((double)(sample - signal.MinAmp) / (signal.MaxAmp - signal.MinAmp)) * timeGraph.ActualHeight;
+            }
+
+            return 0.0;
         }
 
 		private void ScrollChanged(Object sender, ScrollChangedEventArgs e)
@@ -194,67 +167,30 @@ namespace Wave_Analyser
 			DrawGraph();		
 		}
 
-		private void MouseWheelZoom(Object sender, MouseWheelEventArgs e)
-		{
-			int zoomFactor = 2;
-		
-			if (e.Delta > 0)
-			{
-				if (zoom <= 1)
-				{
-					zoom = 1;
-					return; //max zoom in is not skipping any samples
-				}
-				zoom = (zoom / zoomFactor);
-				viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset * zoomFactor);
-                DrawGraph();
-			}
-			else
-			{	
-				if (zoom * zoomFactor > samples.Length / 16)
-				{
-					return; //max zoom out is only drawing 16 samples
-				}
-				zoom = (zoom * zoomFactor);
-				viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset / zoomFactor);
-                DrawGraph();
-			}
-		}
-		
-		public void GenerateSineData(double seconds, int[] freqs)
-		{
-			
-			samples = new int[(int)(sampleRate*seconds)];
-			for (int i = 0; i < samples.Length; i++)
-			{
-				double time = i / sampleRate;
-				samples[i] = 0;
-				for (int j = 0; j < freqs.Length; j++)
-				{
-                    double amp = (maxAmp) / freqs.Length * Math.Sin(2 * Math.PI * freqs[j] * time);
-                    samples[i] += (int)amp;
-					
-				}
-			}
-		}
+        private void MouseWheelZoom(Object sender, MouseWheelEventArgs e)
+        {
+            int zoomFactor = 2;
 
-        public void GenerateSineTone(double seconds, double frequency)
-        {
-            samples = new int[(int)(sampleRate * seconds)];
-            for (int i = 0; i < samples.Length; i++)
+            if (e.Delta > 0)
             {
-                double time = i / sampleRate;
-                double amp = maxAmp * Math.Sin(2 * Math.PI * frequency * time);
-                samples[i] = (int)amp;
+                if (zoom <= 1)
+                {
+                    zoom = 1;
+                    return; //max zoom in is not skipping any signal.Samples
+                }
+                zoom = (zoom / zoomFactor);
+                viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset * zoomFactor);
+                DrawGraph();
             }
-        }
-		
-		public void GenerateRandomSamples(double seconds)
-        {
-            samples = new int[(int)(sampleRate * seconds)];
-            for (int i = 0; i < samples.Length; i++)
+            else
             {
-                samples[i] = random.Next(minAmp, maxAmp + 1);
+                if (zoom * zoomFactor > signal.Samples.Length / 16)
+                {
+                    return; //max zoom out is only drawing 16 signal.Samples
+                }
+                zoom = (zoom * zoomFactor);
+                viewer.ScrollToHorizontalOffset(viewer.HorizontalOffset / zoomFactor);
+                DrawGraph();
             }
         }
     }
