@@ -59,7 +59,7 @@ namespace Wave_Analyser
             //draw y axis numbers
             for (int i = 0; i < height + Y_GAP; i += Y_GAP)
 			{
-				DrawTools.Text(freqGraph, 0, bottom - i, "" + Math.Round(i * signal.MaxAmp / height, 0), freqChartBrush);
+				DrawTools.Text(freqGraph, 0, bottom - i, "" + Math.Round(i * signal.MaxAmp / height, 3), freqChartBrush);
 			}
 
             // draw x axis numbers
@@ -70,7 +70,7 @@ namespace Wave_Analyser
             }
 		}
 
-		public void GenerateFromFourier(int[] samples, int N)
+		public void GenerateFromFourier(float[] samples, int N)
 		{
 			Complex[] fourierResults = Fourier.dft(samples, N);
 			frequencies = new double[fourierResults.Length];

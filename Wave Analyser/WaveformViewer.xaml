@@ -30,6 +30,7 @@
                         />
                     </Canvas>
                 </Grid>
+                
                 <Canvas x:Name="timeAxis" Background="{StaticResource waveformBgBrush}" ClipToBounds="True" Grid.Row="1"/>
             </Grid>
         </ScrollViewer>

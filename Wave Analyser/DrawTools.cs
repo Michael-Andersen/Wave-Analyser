@@ -11,6 +11,10 @@ namespace Wave_Analyser
 {
 	class DrawTools
 	{
+		private static int zoom;
+
+		public static int Zoom { get => zoom; set => zoom = value; }
+
 		public static void Text(Canvas canvas, double x, double y, string text, Brush colour)
 		{
 			TextBlock textBlock = new TextBlock();
