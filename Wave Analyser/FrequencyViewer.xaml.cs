@@ -42,7 +42,10 @@ namespace Wave_Analyser
 		{
             freqGraph.Children.Clear();
             freqGraph.UpdateLayout();
-
+			if (frequencies == null)
+			{
+				return;
+			}
             double left = PADDING;
             double top = PADDING;
             double width = maxFreq * X_GAP / binSize;

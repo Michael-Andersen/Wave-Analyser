@@ -97,6 +97,7 @@ namespace Wave_Analyser
 			SaveFileDialog saveFileDialog = new SaveFileDialog();
 			if (saveFileDialog.ShowDialog() == true)
 			{
+				signal.Mux();
 				signal.WriteToFile(saveFileDialog.FileName);
 			}
 		}

@@ -21,6 +21,13 @@
                     MouseMove="Grid_MouseMove"
                     Background="Transparent" Margin="0,0,0,0"
                 >
+                    <Grid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Copy" Click="Copy"/>
+                            <MenuItem Header="Cut" Click="Cut"/>
+                            <MenuItem Header="Paste" Click="Paste"/>
+                        </ContextMenu>
+                    </Grid.ContextMenu>
                     <Canvas x:Name="timeGraph" Background="{StaticResource waveformBgBrush}" ClipToBounds="True"/>
                     <Canvas>
                         <Rectangle x:Name="selectionBox"

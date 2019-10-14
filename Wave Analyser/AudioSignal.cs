@@ -32,6 +32,10 @@ namespace Wave_Analyser.Classes
 		private int dataID;
 		private int bytes;
 		private bool leftSelected;
+		private float[] clipboardL;
+		private float[] clipboardR;
+		private int clipStart;
+		private int clipEnd;
 
 		public AudioSignal(int sampleRate, int bitDepth, bool signed)
 		{
@@ -56,6 +60,7 @@ namespace Wave_Analyser.Classes
 		public float[] Right { get => right; }
 		public float[] Selection { get => selection; }
 		public bool LeftSelected { get => leftSelected; set => leftSelected = value; }
+		public int Channels { get => channels; }
 
 		public void SetSelection(int start, int end, bool isleftChannel)
 		{
@@ -67,6 +72,54 @@ namespace Wave_Analyser.Classes
 				j++;
 			}
 		}
+
+		public void SetClipboard(int start, int end)
+		{
+			int j = 0;
+			clipboardL = new float[end - start];
+			clipboardR = new float[end - start];
+			for (int i = start; i < end; i++)
+			{
+				clipboardL[j] = left[i];
+				clipboardR[j] = right[i];
+				j++;
+			}
+			clipStart = start;
+			clipEnd = end;
+		}
+
+		public void Paste(int start)
+		{
+			int newEnd = clipboardL.Length + left.Length;
+			float[] temp = new float[left.Length];
+			Array.Copy(left, temp, left.Length);
+			left = new float[newEnd];
+			float[] temp2 = new float[right.Length];
+			Array.Copy(right, temp2, right.Length);
+			right = new float[newEnd];
+			Array.Copy(temp2, right, start);
+			Array.Copy(temp, left, start);
+			Array.Copy(clipboardR, 0, right, start, clipboardR.Length);
+			Array.Copy(clipboardL, 0, left, start, clipboardL.Length);
+			Array.Copy(temp2, start, right, start + clipboardR.Length, temp2.Length - start);
+			Array.Copy(temp, start, left, start + clipboardL.Length, temp.Length - start);
+		}
+
+		public void Cut(int start)
+		{
+			int newEnd =  left.Length - clipboardL.Length;
+			float[] temp = new float[left.Length];
+			Array.Copy(left, temp, left.Length);
+			left = new float[newEnd];
+			float[] temp2 = new float[right.Length];
+			Array.Copy(right, temp2, right.Length);
+			right = new float[newEnd];
+			Array.Copy(temp2, right, start);
+			Array.Copy(temp, left, start);
+			Array.Copy(temp2, start + clipboardR.Length, right, start, temp2.Length - start - clipboardL.Length);
+			Array.Copy(temp, start + clipboardL.Length, left, start, temp.Length - start - clipboardR.Length);
+		}
+
 
 		public void GenerateSineData(double seconds, int[] freqs)
 		{
@@ -184,6 +237,44 @@ namespace Wave_Analyser.Classes
 					{
 						left[i] = samples[s++];
 						right[i] = samples[s++];
+					}
+					break;
+				default:
+					break;
+			}
+		}
+
+		public void Mux()
+		{
+			switch (channels)
+			{
+				case 1:
+					samples = left;
+					break;
+				case 2:
+					int samps = samples.Length / 2;
+					if (left.Length > right.Length)
+					{
+						float[] temp = new float[right.Length];
+						Array.Copy(right, temp, right.Length);
+						right = new float[left.Length];
+						Array.Copy(temp, right, temp.Length);
+					}
+					else if (right.Length > left.Length)
+					{
+						float[] temp = new float[left.Length];
+						Array.Copy(left, temp, left.Length);
+						left = new float[right.Length];
+						Array.Copy(temp, left, temp.Length);
+
+					}
+					samples = new float[left.Length * 2];
+					for (int i = 0, s = 0; i < left.Length; i++)
+					{
+						samples[s] = left[i];
+						s++;
+						samples[s] = right[i];
+						s++;
 					}
 					break;
 				default:
