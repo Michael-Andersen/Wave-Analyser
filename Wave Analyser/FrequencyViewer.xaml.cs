@@ -13,11 +13,17 @@ namespace Wave_Analyser
 	public partial class FrequencyViewer : UserControl
 	{
         public static readonly int PADDING = 50;
-        public static readonly int Y_GAP = 30;
-        public static readonly int X_GAP = 30;
+        public static readonly int Y_GAP = 50;
+        public static readonly int X_GAP = 50;
 
-        private AudioSignal signal;
+        private AudioFile audio;
         private double[] frequencies;
+        private double width;
+        private double height;
+        private double left;
+        private double top;
+        private double right;
+        private double bottom;
 
         private Brush freqChartBrush = (Brush)Application.Current.FindResource("freqChartBrush");
 
@@ -30,49 +36,41 @@ namespace Wave_Analyser
 
         private void FrequencyViewer_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (signal == null)
+            if (audio == null)
                 return;
 
-            DrawGraph(Fourier.BinSize(signal.SampleRate, 2000), 7000);
+            DrawGraph(Fourier.BinSize(audio.SampleRate, audio.Selection.Length), audio.NyquistLimit);
         }
 
-        public AudioSignal Signal { set => signal = value; }
+        public AudioFile AudioFile { set => audio = value; }
 
 		public void DrawGraph(double binSize, int maxFreq)
 		{
             freqGraph.Children.Clear();
             freqGraph.UpdateLayout();
-
-            double left = PADDING;
-            double top = PADDING;
-            double width = maxFreq * X_GAP / binSize;
-            double height = (int)ActualHeight - (PADDING * 2);
-            double right = left + width;
-            double bottom = top + height;
-
-            freqGraph.Width = width;
+            MeasureGraph();
 
             //draw axis
             DrawTools.DrawLine(freqGraph, left, left, top, bottom, freqChartBrush);
             DrawTools.DrawLine(freqGraph, left, right, bottom, bottom, freqChartBrush);
 
             //draw y axis numbers
-            for (int i = 0; i < height + Y_GAP; i += Y_GAP)
+            for (int i = 0; i < height; i += Y_GAP)
 			{
-				DrawTools.Text(freqGraph, 0, bottom - i, "" + Math.Round(i * signal.MaxAmp / height, 3), freqChartBrush);
+				DrawTools.Text(freqGraph, 0, bottom - i, "" + Math.Round(i * audio.MaxAmp / height, 3), freqChartBrush);
 			}
 
             // draw x axis numbers
             for (int i = 0; i < frequencies.Length; i++)
 			{
-                DrawTools.DrawBar(freqGraph, left + i * X_GAP, bottom, 8, frequencies[i] * (height / signal.MaxAmp), freqChartBrush);
+                DrawTools.DrawBar(freqGraph, left + i * X_GAP, bottom, 8, frequencies[i] * (height / audio.MaxAmp), freqChartBrush);
                 DrawTools.Text(freqGraph, left + i * X_GAP, bottom, Math.Round(i * binSize, 0) + "", freqChartBrush);
             }
 		}
 
 		public void GenerateFromFourier(float[] samples, int N)
 		{
-			Complex[] fourierResults = Fourier.dft(samples, N);
+			Complex[] fourierResults = Fourier.DFT(samples, N);
 			frequencies = new double[fourierResults.Length];
 			for (int i = 0; i < frequencies.Length; i++)
 			{
@@ -97,5 +95,15 @@ namespace Wave_Analyser
 				}
 			}
 		}
+
+        private void MeasureGraph()
+        {
+            width = ActualWidth - (PADDING * 2);
+            height = ActualHeight - (PADDING * 2);
+            left = PADDING;
+            top = PADDING;
+            right = left + width;
+            bottom = top + height;
+        }
 	}
 }

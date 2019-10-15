@@ -8,7 +8,7 @@ namespace Wave_Analyser
 {
     class Fourier
     {
-		public static Complex[] dft(float[] s, int N)
+		public static Complex[] DFT(float[] s, int N)
 		{
 			Complex[] results = new Complex[N];
 			for (int f = 0; f < N; f++)
@@ -34,7 +34,7 @@ namespace Wave_Analyser
 			return sampleRate / numSamples;
 		}
 
-		public static float[] idft(Complex[] amplitudes, int N)
+		public static float[] IDFT(Complex[] amplitudes, int N)
 		{
 			float[] results = new float[N];
 			for (int t = 0; t < N; t++)

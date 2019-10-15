@@ -12,8 +12,6 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Menu Background="#eee">
             <MenuItem Header="File">
@@ -22,16 +20,21 @@
                 <MenuItem Header="Save File" 
             Click="SaveFile_Click"/>
             </MenuItem>
-            
         </Menu>
-        <ScrollViewer VerticalScrollBarVisibility="Hidden" Grid.Row="1">
-            <StackPanel x:Name="waveformPanel" Grid.Row="1"/>
-        </ScrollViewer>
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="2">
-            <StackPanel x:Name="waveformPanel2" Grid.Row="2"/>
-        </ScrollViewer>
-        <GridSplitter VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="4" Grid.Row="4" Background="#eee"/>
-        <Grid Grid.Row="4">
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <ScrollViewer VerticalScrollBarVisibility="Hidden" Grid.Row="0">
+                <StackPanel x:Name="waveformPanel" />
+            </ScrollViewer>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1">
+                <StackPanel x:Name="waveformPanel2" />
+            </ScrollViewer>
+        </Grid>
+        <GridSplitter VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="4" Grid.Row="2" Background="#eee"/>
+        <Grid Grid.Row="3" Grid.RowSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="3*"/>
                 <ColumnDefinition Width="*"/>

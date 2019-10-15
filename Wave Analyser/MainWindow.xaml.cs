@@ -22,20 +22,14 @@ namespace Wave_Analyser
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-        public readonly int SAMPLE_RATE = 44100;
-        public readonly int BIT_DEPTH = 16;
-        public readonly int BIN_SIZE = 500;
-        public readonly int NUM_SAMPLES = 7000;
-
         private WaveformViewer waveformViewerL;
 		private WaveformViewer waveformViewerR;
-        private AudioSignal signal;
+        private AudioFile audio;
 
 		public MainWindow()
 		{
 			InitializeComponent();
 
-            signal = new AudioSignal(SAMPLE_RATE, BIT_DEPTH, true);
 			waveformViewerL = new WaveformViewer(true);
 			waveformViewerR = new WaveformViewer(false);
 			waveformViewerL.OtherChannel = waveformViewerR;
@@ -47,12 +41,10 @@ namespace Wave_Analyser
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-
             compositeButton.Click += CompositeButton_Click;
             sineButton.Click += SineButton_Click;
             randomButton.Click += RandomButton_Click;
             dftButton.Click += DftButton_Click;
-			
         }
 
         private void RandomButton_Click(object sender, RoutedEventArgs e)
@@ -72,10 +64,10 @@ namespace Wave_Analyser
 
         private void DftButton_Click(object sender, RoutedEventArgs e)
         {
-			WaveformViewer useWV = (signal.LeftSelected) ? waveformViewerL : waveformViewerR;
-            signal.SetSelection(useWV.SelectStart, useWV.SelectEnd, signal.LeftSelected);
-            freqDomain.GenerateFromFourier(signal.Selection, signal.Selection.Length);
-            freqDomain.DrawGraph(Fourier.BinSize(signal.SampleRate, signal.Selection.Length), 7000);
+            WaveformViewer useWV = (audio.LeftSelected) ? waveformViewerL : waveformViewerR;
+            audio.SetSelection(useWV.SelectStart, useWV.SelectEnd, audio.LeftSelected);
+            freqDomain.GenerateFromFourier(audio.Selection, audio.Selection.Length);
+            freqDomain.DrawGraph(Fourier.BinSize(audio.SampleRate, audio.Selection.Length), audio.NyquistLimit);
         }
 
 		private void OpenFile_Click(object sender, RoutedEventArgs e)
@@ -83,12 +75,12 @@ namespace Wave_Analyser
 			OpenFileDialog openFileDialog = new OpenFileDialog();
 			if (openFileDialog.ShowDialog() == true)
 			{
-				signal.readFromFile(openFileDialog.FileName);
-				waveformViewerL.Signal = signal;
+                audio = AudioFile.ReadFromFile(openFileDialog.FileName);
+				waveformViewerL.AudioFile = audio;
 				waveformViewerL.DrawGraph();
-				waveformViewerR.Signal = signal;
+				waveformViewerR.AudioFile = audio;
 				waveformViewerR.DrawGraph();
-				freqDomain.Signal = signal;
+				freqDomain.AudioFile = audio;
 			}
 		}
 
@@ -97,7 +89,7 @@ namespace Wave_Analyser
 			SaveFileDialog saveFileDialog = new SaveFileDialog();
 			if (saveFileDialog.ShowDialog() == true)
 			{
-				signal.WriteToFile(saveFileDialog.FileName);
+                audio.WriteToFile(saveFileDialog.FileName);
 			}
 		}
 	}
