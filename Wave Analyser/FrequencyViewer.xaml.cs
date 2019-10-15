@@ -13,7 +13,7 @@ namespace Wave_Analyser
 	public partial class FrequencyViewer : UserControl
 	{
         public static readonly int PADDING = 50;
-        public static readonly int Y_GAP = 50;
+        public static readonly int Y_GAP = 30;
         public static readonly int X_GAP = 50;
 
         private AudioFile audio;
