@@ -14,7 +14,7 @@ namespace Wave_Analyser
 			for (int f = 0; f < N; f++)
 			{
 				results[f] = new Complex(0, 0);
-				for (int t = 0; t < N; t++)
+				for (int t = 0; t < s.Length; t++)
 				{
 					results[f] += new Complex(s[t] * Math.Cos(t * 2 * Math.PI * (f) / N),
 						-1 * s[t] * Math.Sin(t * 2 * Math.PI * (f) / N));
@@ -29,9 +29,9 @@ namespace Wave_Analyser
 			return binNumber * sampleRate / numSamples;
 		}
 
-		public static double BinSize(double sampleRate, int numSamples)
+		public static double BinSize(double sampleRate, int numBins)
 		{
-			return sampleRate / numSamples;
+			return sampleRate / numBins;
 		}
 
 		public static float[] IDFT(Complex[] amplitudes, int N)

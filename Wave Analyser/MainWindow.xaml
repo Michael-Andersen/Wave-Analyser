@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wave_Analyser"
         mc:Ignorable="d"
-        Title="MainWindow" Height="1000" Width="1000">
+        Title="MainWindow" Height="1000" Width="1500">
     <Grid Background="{StaticResource bgBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

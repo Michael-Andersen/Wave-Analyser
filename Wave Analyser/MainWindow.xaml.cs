@@ -66,8 +66,10 @@ namespace Wave_Analyser
         {
             WaveformViewer useWV = (audio.LeftSelected) ? waveformViewerL : waveformViewerR;
             audio.SetSelection(useWV.SelectStart, useWV.SelectEnd, audio.LeftSelected);
-            freqDomain.GenerateFromFourier(audio.Selection, audio.Selection.Length);
-            freqDomain.DrawGraph(Fourier.BinSize(audio.SampleRate, audio.Selection.Length), audio.NyquistLimit);
+            freqDomain.GenerateFromFourier(audio.Selection);
+            Console.WriteLine(audio.SampleRate);
+            Console.WriteLine(audio.NyquistLimit);
+            freqDomain.DrawGraph();
         }
 
 		private void OpenFile_Click(object sender, RoutedEventArgs e)
