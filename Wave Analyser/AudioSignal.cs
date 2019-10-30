@@ -42,13 +42,65 @@ namespace Wave_Analyser.Classes
 			this.sampleRate = sampleRate;
 			this.bitDepth = bitDepth;
 			this.signed = signed;
-			//this.maxAmp = signed ? (int)Math.Pow(2, bitDepth - 1) : (int)Math.Pow(2, bitDepth);
 			this.maxAmp = 1;
 			this.minAmp = -1;
-			//this.minAmp = 0;
-			//this.maxAmp = 20 * Math.Log10(1);
-			//this.minAmp = signed ? (-maxAmp)-1 : 0;
 			this.random = new Random();
+		}
+
+		public void makeEcho()
+		{
+			float[] temp = new float[samples.Length];
+		for (int i = 0; i < samples.Length; i++)
+			{
+				temp[i] = samples[i];
+				if (i > sampleRate/2)
+				{
+					temp[i] += samples[i - sampleRate / 2] * (float)0.5 + temp[i-sampleRate/2] *(float)0.125;
+				}
+			
+			}
+			samples = temp;
+		}
+		
+		public AudioSignal(byte[] byteArray, int channels, int bitDepth, int sampleRate)
+		{
+			this.maxAmp = 1;
+			this.minAmp = -1;
+			this.sampleRate = sampleRate;
+			this.bitDepth = bitDepth;
+			this.channels = channels;
+			this.chunkID = 1179011410;
+			this.riffType = 1163280727;
+			this.fmtID = 544501094;
+			this.fmtSize = 16;
+			this.fmtCode = 1;
+			this.byteRate = sampleRate * channels * bitDepth / 8;
+			this.fmtBlockAlign = channels * bitDepth / 8;
+			this.dataID = 1635017060;
+			bytes = byteArray.Length;
+			fileSize = bytes + 36;
+			int bytesForSamp = bitDepth / 8;
+			int samps = bytes / bytesForSamp;
+			switch (bitDepth)
+			{	
+				case 16:
+					signed = true;
+					Int16[] asInt16 = new Int16[samps];
+					Buffer.BlockCopy(byteArray, 0, asInt16, 0, bytes);
+					samples = Array.ConvertAll(asInt16, e => (e < 0) ?
+						-1 * e / (float)Int16.MinValue : e / (float)Int16.MaxValue);
+					break;
+				case 8:
+					signed = false;
+					samples = Array.ConvertAll(byteArray, e => ((e + SByte.MinValue) < 0) ?
+					-1 * (e + SByte.MinValue) / (float)SByte.MinValue :
+					(e + SByte.MinValue) / (float)SByte.MaxValue);
+					break;
+				default:
+					break;
+			}
+			
+			DeMux();
 		}
 
 		public double SampleRate { get => sampleRate; }
@@ -61,6 +113,8 @@ namespace Wave_Analyser.Classes
 		public float[] Selection { get => selection; }
 		public bool LeftSelected { get => leftSelected; set => leftSelected = value; }
 		public int Channels { get => channels; }
+		public int BitDepth { get => bitDepth; }
+		public int Bytes { get => bytes; }
 
 		public void SetSelection(int start, int end, bool isleftChannel)
 		{
@@ -103,6 +157,10 @@ namespace Wave_Analyser.Classes
 			Array.Copy(clipboardL, 0, left, start, clipboardL.Length);
 			Array.Copy(temp2, start, right, start + clipboardR.Length, temp2.Length - start);
 			Array.Copy(temp, start, left, start + clipboardL.Length, temp.Length - start);
+			Mux();
+			int bytesForSamp = bitDepth / 8;
+			bytes = samples.Length * bytesForSamp;
+			fileSize = bytes + 36;
 		}
 
 		public void Cut(int start)
@@ -118,6 +176,10 @@ namespace Wave_Analyser.Classes
 			Array.Copy(temp, left, start);
 			Array.Copy(temp2, start + clipboardR.Length, right, start, temp2.Length - start - clipboardL.Length);
 			Array.Copy(temp, start + clipboardL.Length, left, start, temp.Length - start - clipboardR.Length);
+			Mux();
+			int bytesForSamp = bitDepth / 8;
+			bytes = samples.Length * bytesForSamp;
+			fileSize = bytes + 36;
 		}
 
 
@@ -252,7 +314,7 @@ namespace Wave_Analyser.Classes
 					samples = left;
 					break;
 				case 2:
-					int samps = samples.Length / 2;
+					/*int samps = samples.Length / 2;
 					if (left.Length > right.Length)
 					{
 						float[] temp = new float[right.Length];
@@ -267,7 +329,7 @@ namespace Wave_Analyser.Classes
 						left = new float[right.Length];
 						Array.Copy(temp, left, temp.Length);
 
-					}
+					}*/
 					samples = new float[left.Length * 2];
 					for (int i = 0, s = 0; i < left.Length; i++)
 					{
@@ -306,32 +368,9 @@ namespace Wave_Analyser.Classes
 				int bytesForSamp = bitDepth / 8;
 				bytes = samples.Length * bytesForSamp;
 				wr.Write(bytes);
-				byte[] byteArray = new Byte[bytes];
-				switch (bitDepth)
-				{
-					case 64:
-						Buffer.BlockCopy(samples, 0, byteArray, 0, bytes);
-						break;
-					case 32:
-						Buffer.BlockCopy(samples, 0, byteArray, 0, bytes);
-						break;
-					case 16:
-						Int16[] asInt16 = new Int16[samples.Length];
-						asInt16 = Array.ConvertAll(samples, e => (e < 0) ?
-							(short)(-1 * e * Int16.MinValue) : (short)(e * Int16.MaxValue));
-						Buffer.BlockCopy(asInt16, 0, byteArray, 0, bytes);
-						break;
-					case 8:
-						Byte[] asBytes = new byte[bytes];
-						asBytes = Array.ConvertAll(samples, e => ((e + SByte.MinValue) < 0) ?
-						(byte)((-1 * e * SByte.MinValue) - SByte.MinValue) :
-						(byte)((e * SByte.MaxValue) - SByte.MinValue));
-						byteArray = asBytes;
-						break;
-					default:
-						break;
-				}
-					for (int i = 0; i < byteArray.Length; i++)
+				byte[] byteArray = floatToBytes();
+				
+				for (int i = 0; i < byteArray.Length; i++)
 				{
 					wr.Write(byteArray[i]);
 				}
@@ -339,5 +378,35 @@ namespace Wave_Analyser.Classes
 				
 			}
 		}
+		public Byte[] floatToBytes()
+		{
+			byte[] byteArray = new Byte[bytes];
+			switch (bitDepth)
+			{
+				case 64:
+					Buffer.BlockCopy(samples, 0, byteArray, 0, bytes);
+					break;
+				case 32:
+					Buffer.BlockCopy(samples, 0, byteArray, 0, bytes);
+					break;
+				case 16:
+					Int16[] asInt16 = new Int16[samples.Length];
+					asInt16 = Array.ConvertAll(samples, e => (e < 0) ?
+						(short)(-1 * e * Int16.MinValue) : (short)(e * Int16.MaxValue));
+					Buffer.BlockCopy(asInt16, 0, byteArray, 0, bytes);
+					break;
+				case 8:
+					Byte[] asBytes = new byte[bytes];
+					asBytes = Array.ConvertAll(samples, e => ((e + SByte.MinValue) < 0) ?
+					(byte)((-1 * e * SByte.MinValue) - SByte.MinValue) :
+					(byte)((e * SByte.MaxValue) - SByte.MinValue));
+					byteArray = asBytes;
+					break;
+				default:
+					break;
+			}
+			return byteArray;
+		}
 	}
+
 }
