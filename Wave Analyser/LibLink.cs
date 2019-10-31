@@ -98,6 +98,7 @@ namespace Wave_Analyser
 		}
 		public void playStop()
 		{
+			playing = false;
 			PlayStop();
 		}
 
