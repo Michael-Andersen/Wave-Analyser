@@ -13,9 +13,10 @@ namespace Wave_Analyser
 	public partial class FrequencyViewer : UserControl
 	{
         public static readonly int PADDING = 50;
-        public static readonly int Y_GAP = 30;
-        public static readonly int X_GAP = 4;
+        public static readonly int NUM_Y = 16;
+        public static readonly int NUM_X = 16;
         public static readonly int N = 128;
+        public static readonly int BAR_WIDTH = 8;
 
         private AudioFile audio;
         private double[] frequencies;
@@ -25,6 +26,7 @@ namespace Wave_Analyser
         private double top;
         private double right;
         private double bottom;
+        private double maxFreq;
         private int numBins;
 
         private Brush freqChartBrush = (Brush)Application.Current.FindResource("freqChartBrush");
@@ -32,7 +34,9 @@ namespace Wave_Analyser
         public FrequencyViewer()
 		{
 			InitializeComponent();
+
             numBins = N;
+            maxFreq = 0;
 
             this.SizeChanged += FrequencyViewer_SizeChanged;
         }
@@ -60,18 +64,29 @@ namespace Wave_Analyser
             DrawTools.DrawLine(freqGraph, left, right, bottom, bottom, freqChartBrush);
 
             //draw y axis numbers
-            for (int i = 0; i < height; i += Y_GAP)
+            double yGap = height / NUM_Y;
+
+            for (int i = 1; i < NUM_Y + 1; i++)
 			{
-				DrawTools.Text(freqGraph, 0, bottom - i, "" + Math.Round(i * audio.MaxAmp / height, 3), freqChartBrush);
+                double amplitude = maxFreq * ((double) i / (NUM_Y));
+                DrawTools.Text(freqGraph, 0, bottom - i * yGap, "" + Math.Round(amplitude, 3), freqChartBrush);
 			}
+
+            // draw bars
+            double xGap = width / frequencies.Length;
            
-            // draw x axis numbers
-            for (int i = 0; i < nyquistLimit; i++)
+            for (int i = 0; i < frequencies.Length; i++)
 			{
-                int frequency = i * audio.SampleRate / numBins;
-                DrawTools.DrawBar(freqGraph, left + i * gap, bottom, 8, frequencies[i] * (height / audio.MaxAmp), freqChartBrush);
-                if (i % X_GAP == 0)
-                    DrawTools.Text(freqGraph, left + i * gap, bottom, frequency + "", freqChartBrush);
+                DrawTools.DrawBar(freqGraph, left + i * xGap, bottom, BAR_WIDTH, frequencies[i] * (height / maxFreq), freqChartBrush);
+            }
+
+            // draw x axis numbers
+            xGap = width / NUM_X;
+
+            for (int i = 0; i < NUM_X + 1; i++)
+            {
+                int frequency = (i * audio.SampleRate / NUM_X);
+                DrawTools.Text(freqGraph, left + i * xGap, bottom, frequency + "", freqChartBrush);
             }
 		}
 
@@ -79,10 +94,15 @@ namespace Wave_Analyser
 		{
 			Complex[] fourierResults = Fourier.DFT(samples, numBins);
 			frequencies = new double[fourierResults.Length];
+            maxFreq = 0;
 			for (int i = 0; i < frequencies.Length; i++)
 			{
-				frequencies[i] = fourierResults[i].VectorLength();
+                double amplitude = fourierResults[i].VectorLength();
+                frequencies[i] = amplitude;
+                if (frequencies[i] > maxFreq)
+                    maxFreq = frequencies[i];
 			}
+            Console.WriteLine("MAX FREQUENCY: " + maxFreq);
 		}
 
 		public void GenerateFreqData()
