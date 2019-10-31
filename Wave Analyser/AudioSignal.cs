@@ -37,6 +37,11 @@ namespace Wave_Analyser.Classes
 		private int clipStart;
 		private int clipEnd;
 
+		public AudioSignal()
+		{
+			maxAmp = 1;
+			minAmp = -1;
+		}
 		public AudioSignal(int sampleRate, int bitDepth, bool signed)
 		{
 			this.sampleRate = sampleRate;
@@ -314,22 +319,6 @@ namespace Wave_Analyser.Classes
 					samples = left;
 					break;
 				case 2:
-					/*int samps = samples.Length / 2;
-					if (left.Length > right.Length)
-					{
-						float[] temp = new float[right.Length];
-						Array.Copy(right, temp, right.Length);
-						right = new float[left.Length];
-						Array.Copy(temp, right, temp.Length);
-					}
-					else if (right.Length > left.Length)
-					{
-						float[] temp = new float[left.Length];
-						Array.Copy(left, temp, left.Length);
-						left = new float[right.Length];
-						Array.Copy(temp, left, temp.Length);
-
-					}*/
 					samples = new float[left.Length * 2];
 					for (int i = 0, s = 0; i < left.Length; i++)
 					{

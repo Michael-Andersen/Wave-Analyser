@@ -14,12 +14,17 @@ static PWAVEHDR     pWaveHdr1, pWaveHdr2;
 static TCHAR        szOpenError[] = TEXT("Error opening waveform audio!");
 static TCHAR        szMemError[] = TEXT("Error allocating memory!");
 static WAVEFORMATEX waveform;
+static HWND hwnd;
 
 TCHAR szAppName[] = TEXT("Record1");
 
 int WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, PVOID pvReserved)
 {
 	return TRUE;
+}
+
+EXPORT VOID CALLBACK SetHandle(HWND handle) {
+	hwnd = handle;
 }
 
 EXPORT void CALLBACK SetPSaveBuffer(PBYTE pSaveBuff) {
@@ -65,7 +70,7 @@ EXPORT VOID CALLBACK SetBitDepth(WORD depth) {
 }
 
 
-EXPORT BOOL CALLBACK PlayStart(HWND hwnd) {
+EXPORT BOOL CALLBACK PlayStart() {
 	waveform.wFormatTag = WAVE_FORMAT_PCM;
 	//waveform.nChannels = 1;
 	//waveform.nSamplesPerSec = 11025;
@@ -100,7 +105,7 @@ EXPORT void CALLBACK Initialize() {
 	pSaveBuffer = malloc(1);
 }
 
-EXPORT BOOL CALLBACK RecordStart(HWND hwnd) {
+EXPORT BOOL CALLBACK RecordStart() {
 
 	pBuffer1 = malloc(INP_BUFFER_SIZE);
 	pBuffer2 = malloc(INP_BUFFER_SIZE);
@@ -161,7 +166,7 @@ EXPORT BOOL CALLBACK RecordStart(HWND hwnd) {
 	return TRUE;
 }
 
-EXPORT BOOL CALLBACK PlayPause(HWND hwnd) {
+EXPORT BOOL CALLBACK PlayPause() {
 	if (!bPaused)
 	{
 		waveOutPause(hWaveOut);
@@ -179,7 +184,7 @@ EXPORT BOOL CALLBACK PlayPause(HWND hwnd) {
 
 
 
-EXPORT PBYTE CALLBACK Record_Proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+EXPORT PBYTE CALLBACK Record_Proc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	
 

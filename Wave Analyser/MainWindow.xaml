@@ -39,31 +39,7 @@
             </Grid.ColumnDefinitions>
             <local:FrequencyViewer x:Name="freqDomain"/>
             <Border Padding="10"  Grid.Column="1" Background="{StaticResource menuBgBrush}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="10*" SharedSizeGroup="a" />
-                        <ColumnDefinition Width="1*" SharedSizeGroup="a" />
-                        <ColumnDefinition Width="10*" SharedSizeGroup="b" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.ColumnSpan="1" Grid.Column="0">
-                        <Button x:Name="playButton" Click="PlayButton_Click">Play</Button>
-                        <Label>Sample Rate (Hz)</Label>
-                        <Slider IsSnapToTickEnabled="True"
-    TickFrequency="1" ValueChanged="SliderValueChanged" Name="slValue" Visibility="Collapsed" Maximum="99999" Width ="100" Minimum="1" Value="44100" HorizontalAlignment="Left" Margin="444,58,0,0" VerticalAlignment="Top"/>
-                        <TextBox Grid.Column="0" Text="{Binding ElementName=slValue, Path=Value, UpdateSourceTrigger=PropertyChanged}" x:Name="sampleRateInput"/>
-                        <Button x:Name="recordButton" Click="RecordButton_Click">Start Recording</Button>
-                        <Button x:Name="echoButton" Click="EchoButton_Click">Add Echo</Button>
-                        <Button x:Name="dftButton" Click="DftButton_Click">Apply DFT</Button>
-                    </StackPanel>
-                    <StackPanel Grid.ColumnSpan="1" Grid.Column="2">
-                        <Button x:Name="stopBtn" Click="stopBtn_Click">Stop</Button>
-                        <Label>Bit Depth</Label>
-                        <ComboBox IsSynchronizedWithCurrentItem="True" SelectedIndex="1" x:Name="bitDepthComboBox" SelectionChanged="BitDepthComboBox_SelectionChanged">
-                            <ComboBoxItem x:Name="bd8">8 bit</ComboBoxItem>
-                            <ComboBoxItem x:Name="bd16">16 bit</ComboBoxItem>
-                        </ComboBox>
-                    </StackPanel>
-                </Grid>
+                <local:ControlBox x:Name="controlBox"></local:ControlBox>
             </Border>
         </Grid>
     </Grid>
