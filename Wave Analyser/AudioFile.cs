@@ -19,18 +19,80 @@ namespace Wave_Analyser.Classes
 		private float[] right;
 		private float[] left;
 		private bool leftSelected;
-        
-		private AudioFile(AudioFileHeader header)
-		{
-            this.header = header;
-            this.nyquistLimit = (int) header.sampleRate / 2;
-			this.maxAmp = 1;
-			this.minAmp = -1;
-			this.random = new Random();
-		}
+        private float[] clipboardL;
+        private float[] clipboardR;
+        private int clipStart;
+        private int clipEnd;
 
-		public int SampleRate { get => header.sampleRate; }
+        private AudioFile(AudioFileHeader header)
+        {
+            this.header = header;
+            this.nyquistLimit = (int)header.sampleRate / 2;
+            maxAmp = 1;
+            minAmp = -1;
+            this.random = new Random();
+        }
+
+        public AudioFile(byte[] byteArray, int channels, int bitDepth, int sampleRate)
+        {
+            header = new AudioFileHeader();
+            this.maxAmp = 1;
+            this.minAmp = -1;
+            header.sampleRate = sampleRate;
+            header.bitDepth = bitDepth;
+            header.channels = channels;
+            header.chunkID = 1179011410;
+            header.riffType = 1163280727;
+            header.fmtID = 544501094;
+            header.fmtSize = 16;
+            header.fmtCode = 1;
+            header.byteRate = sampleRate * channels * bitDepth / 8;
+            header.fmtBlockAlign = channels * bitDepth / 8;
+            header.dataID = 1635017060;
+            header.bytes = byteArray.Length;
+            header.fileSize = header.bytes + 36;
+            int bytesForSamp = bitDepth / 8;
+            int samps = header.bytes / bytesForSamp;
+            switch (bitDepth)
+            {
+                case 16:
+                    header.signed = true;
+                    Int16[] asInt16 = new Int16[samps];
+                    Buffer.BlockCopy(byteArray, 0, asInt16, 0, header.bytes);
+                    samples = Array.ConvertAll(asInt16, e => (e < 0) ?
+                        -1 * e / (float)Int16.MinValue : e / (float)Int16.MaxValue);
+                    break;
+                case 8:
+                    header.signed = false;
+                    samples = Array.ConvertAll(byteArray, e => ((e + SByte.MinValue) < 0) ?
+                    -1 * (e + SByte.MinValue) / (float)SByte.MinValue :
+                    (e + SByte.MinValue) / (float)SByte.MaxValue);
+                    break;
+                default:
+                    break;
+            }
+
+            DeMux();
+        }
+
+        public int SampleRate { get => header.sampleRate; }
         public int NyquistLimit { get => nyquistLimit; }
+
+		public void makeEcho()
+		{
+			float[] temp = new float[samples.Length];
+		for (int i = 0; i < samples.Length; i++)
+			{
+				temp[i] = samples[i];
+				if (i > header.sampleRate / 2)
+				{
+					temp[i] += samples[i - header.sampleRate / 2] * (float)0.5 + temp[i - header.sampleRate / 2] *(float)0.125;
+				}
+			
+			}
+			samples = temp;
+		}
+		
 		public double MaxAmp { get => maxAmp; }
 		public double MinAmp { get => minAmp; }
 		public bool Signed { get => header.signed; }
@@ -39,6 +101,9 @@ namespace Wave_Analyser.Classes
 		public float[] Right { get => right; }
 		public float[] Selection { get => selection; }
 		public bool LeftSelected { get => leftSelected; set => leftSelected = value; }
+		public int Channels { get => header.channels; }
+		public int BitDepth { get => header.bitDepth; }
+		public int Bytes { get => header.bytes; }
 
 		public void SetSelection(int start, int end, bool isleftChannel)
 		{
@@ -51,13 +116,69 @@ namespace Wave_Analyser.Classes
 			}
 		}
 
+		public void SetClipboard(int start, int end)
+		{
+			int j = 0;
+			clipboardL = new float[end - start];
+			clipboardR = new float[end - start];
+			for (int i = start; i < end; i++)
+			{
+				clipboardL[j] = left[i];
+				clipboardR[j] = right[i];
+				j++;
+			}
+			clipStart = start;
+			clipEnd = end;
+		}
+
+		public void Paste(int start)
+		{
+			int newEnd = clipboardL.Length + left.Length;
+			float[] temp = new float[left.Length];
+			Array.Copy(left, temp, left.Length);
+			left = new float[newEnd];
+			float[] temp2 = new float[right.Length];
+			Array.Copy(right, temp2, right.Length);
+			right = new float[newEnd];
+			Array.Copy(temp2, right, start);
+			Array.Copy(temp, left, start);
+			Array.Copy(clipboardR, 0, right, start, clipboardR.Length);
+			Array.Copy(clipboardL, 0, left, start, clipboardL.Length);
+			Array.Copy(temp2, start, right, start + clipboardR.Length, temp2.Length - start);
+			Array.Copy(temp, start, left, start + clipboardL.Length, temp.Length - start);
+			Mux();
+			int bytesForSamp = header.bitDepth / 8;
+			header.bytes = samples.Length * bytesForSamp;
+			header.fileSize = header.bytes + 36;
+		}
+
+		public void Cut(int start)
+		{
+			int newEnd =  left.Length - clipboardL.Length;
+			float[] temp = new float[left.Length];
+			Array.Copy(left, temp, left.Length);
+			left = new float[newEnd];
+			float[] temp2 = new float[right.Length];
+			Array.Copy(right, temp2, right.Length);
+			right = new float[newEnd];
+			Array.Copy(temp2, right, start);
+			Array.Copy(temp, left, start);
+			Array.Copy(temp2, start + clipboardR.Length, right, start, temp2.Length - start - clipboardL.Length);
+			Array.Copy(temp, start + clipboardL.Length, left, start, temp.Length - start - clipboardR.Length);
+			Mux();
+			int bytesForSamp = header.bitDepth / 8;
+			header.bytes = samples.Length * bytesForSamp;
+			header.fileSize = header.bytes + 36;
+		}
+
+
 		public void GenerateSineData(double seconds, int[] freqs)
 		{
 			samples = new float[(int)(SampleRate * seconds)];
 
 			for (int i = 0; i < samples.Length; i++)
 			{
-				double time = i / SampleRate;
+				double time = i / header.sampleRate;
 				samples[i] = 0;
 				for (int j = 0; j < freqs.Length; j++)
 				{
@@ -69,7 +190,7 @@ namespace Wave_Analyser.Classes
 
 		public void GenerateRandomData(double seconds)
 		{
-			samples = new float[(int)(SampleRate * seconds)];
+			samples = new float[(int)(header.sampleRate * seconds)];
 
 			for (int i = 0; i < samples.Length; i++)
 			{
@@ -184,6 +305,28 @@ namespace Wave_Analyser.Classes
 			}
 		}
 
+		public void Mux()
+		{
+			switch (header.channels)
+			{
+				case 1:
+					samples = left;
+					break;
+				case 2:
+					samples = new float[left.Length * 2];
+					for (int i = 0, s = 0; i < left.Length; i++)
+					{
+						samples[s] = left[i];
+						s++;
+						samples[s] = right[i];
+						s++;
+					}
+					break;
+				default:
+					break;
+			}
+		}
+
 		public void WriteToFile(String filename)
 		{
 			using (FileStream fs = new FileStream(filename, FileMode.Create))
@@ -208,38 +351,46 @@ namespace Wave_Analyser.Classes
 
 				wr.Write(header.dataID);
 				int bytesForSamp = header.bitDepth / 8;
-                header.bytes = samples.Length * bytesForSamp;
+				header.bytes = samples.Length * bytesForSamp;
 				wr.Write(header.bytes);
-				byte[] byteArray = new Byte[header.bytes];
-				switch (header.bitDepth)
-				{
-					case 64:
-						Buffer.BlockCopy(samples, 0, byteArray, 0, header.bytes);
-						break;
-					case 32:
-						Buffer.BlockCopy(samples, 0, byteArray, 0, header.bytes);
-						break;
-					case 16:
-						Int16[] asInt16 = new Int16[samples.Length];
-						asInt16 = Array.ConvertAll(samples, e => (e < 0) ?
-							(short)(-1 * e * Int16.MinValue) : (short)(e * Int16.MaxValue));
-						Buffer.BlockCopy(asInt16, 0, byteArray, 0, header.bytes);
-						break;
-					case 8:
-						Byte[] asBytes = new byte[header.bytes];
-						asBytes = Array.ConvertAll(samples, e => ((e + SByte.MinValue) < 0) ?
-						(byte)((-1 * e * SByte.MinValue) - SByte.MinValue) :
-						(byte)((e * SByte.MaxValue) - SByte.MinValue));
-						byteArray = asBytes;
-						break;
-					default:
-						break;
-				}
-					for (int i = 0; i < byteArray.Length; i++)
+				byte[] byteArray = floatToBytes();
+				
+				for (int i = 0; i < byteArray.Length; i++)
 				{
 					wr.Write(byteArray[i]);
 				}
 			}
 		}
+
+		public Byte[] floatToBytes()
+		{
+			byte[] byteArray = new Byte[header.bytes];
+			switch (header.bitDepth)
+			{
+				case 64:
+					Buffer.BlockCopy(samples, 0, byteArray, 0, header.bytes);
+					break;
+				case 32:
+					Buffer.BlockCopy(samples, 0, byteArray, 0, header.bytes);
+					break;
+				case 16:
+					Int16[] asInt16 = new Int16[samples.Length];
+					asInt16 = Array.ConvertAll(samples, e => (e < 0) ?
+						(short)(-1 * e * Int16.MinValue) : (short)(e * Int16.MaxValue));
+					Buffer.BlockCopy(asInt16, 0, byteArray, 0, header.bytes);
+					break;
+				case 8:
+					Byte[] asBytes = new byte[header.bytes];
+					asBytes = Array.ConvertAll(samples, e => ((e + SByte.MinValue) < 0) ?
+					(byte)((-1 * e * SByte.MinValue) - SByte.MinValue) :
+					(byte)((e * SByte.MaxValue) - SByte.MinValue));
+					byteArray = asBytes;
+					break;
+				default:
+					break;
+			}
+			return byteArray;
+		}
 	}
+
 }

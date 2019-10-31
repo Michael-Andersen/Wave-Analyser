@@ -15,7 +15,7 @@ namespace Wave_Analyser
         public static readonly int PADDING = 50;
         public static readonly int NUM_Y = 16;
         public static readonly int NUM_X = 16;
-        public static readonly int N = 128;
+        public static readonly int N = 164;
         public static readonly int BAR_WIDTH = 8;
 
         private AudioFile audio;
@@ -27,15 +27,13 @@ namespace Wave_Analyser
         private double right;
         private double bottom;
         private double maxFreq;
-        private int numBins;
-
         private Brush freqChartBrush = (Brush)Application.Current.FindResource("freqChartBrush");
 
         public FrequencyViewer()
 		{
 			InitializeComponent();
 
-            numBins = N;
+            NumBins = N;
             maxFreq = 0;
 
             this.SizeChanged += FrequencyViewer_SizeChanged;
@@ -49,14 +47,15 @@ namespace Wave_Analyser
             DrawGraph();
         }
 
-        public AudioFile AudioFile { set => audio = value; }
+        public AudioFile Audio { set => audio = value; }
 
-        public int NumBins { get => numBins;  set => numBins = value; }
+        public int NumBins { get; set; }
 
-		public void DrawGraph()
+        public void DrawGraph()
 		{
             freqGraph.Children.Clear();
             freqGraph.UpdateLayout();
+
             MeasureGraph();
 
             //draw axis
@@ -92,7 +91,7 @@ namespace Wave_Analyser
 
 		public void GenerateFromFourier(float[] samples)
 		{
-			Complex[] fourierResults = Fourier.DFT(samples, numBins);
+			Complex[] fourierResults = Fourier.DFT(samples, NumBins);
 			frequencies = new double[fourierResults.Length];
             maxFreq = 0;
 			for (int i = 0; i < frequencies.Length; i++)

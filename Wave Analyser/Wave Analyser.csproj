@@ -20,7 +20,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -59,15 +59,23 @@
     </ApplicationDefinition>
     <Compile Include="AudioFile.cs" />
     <Compile Include="AudioFileHeader.cs" />
+    <Compile Include="ControlBox.xaml.cs">
+      <DependentUpon>ControlBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DrawTools.cs" />
     <Compile Include="Complex.cs" />
     <Compile Include="Fourier.cs" />
     <Compile Include="FrequencyViewer.xaml.cs">
       <DependentUpon>FrequencyViewer.xaml</DependentUpon>
     </Compile>
+    <Compile Include="LibLink.cs" />
     <Compile Include="WaveformViewer.xaml.cs">
       <DependentUpon>WaveformViewer.xaml</DependentUpon>
     </Compile>
+    <Page Include="ControlBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

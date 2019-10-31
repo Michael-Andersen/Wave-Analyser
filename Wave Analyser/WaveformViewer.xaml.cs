@@ -46,15 +46,23 @@ namespace Wave_Analyser
             viewer.ScrollChanged += ScrollChanged;
         }
 
-        public AudioFile AudioFile { set => audio = value; }
+        public AudioFile Audio { get => audio;  set => audio = value; }
         public int SelectStart { get => selectStart; }
         public int SelectEnd { get => selectEnd; }
 		public WaveformViewer OtherChannel { set => otherChannel = value; }
 
         private void Grid_MouseDown(object sender, MouseButtonEventArgs e)
 		{
+			if (audio == null)
+			{
+				return;
+			}
+			mouseDownPos = e.GetPosition(timeGraph);
+			if (e.ChangedButton == MouseButton.Right)
+			{
+				return;
+			}
 			mouseDown = true;
-			mouseDownPos = e.GetPosition(theGrid);
 			theGrid.CaptureMouse();
 
 			Canvas.SetLeft(selectionBox, mouseDownPos.X);
@@ -72,6 +80,14 @@ namespace Wave_Analyser
 
 		private void Grid_MouseUp(object sender, MouseButtonEventArgs e)
 		{
+			if (audio == null)
+			{
+				return;
+			}
+			if (e.ChangedButton == MouseButton.Right)
+			{
+				return;
+			}
 			mouseDown = false;
 			theGrid.ReleaseMouseCapture();
 
@@ -83,10 +99,18 @@ namespace Wave_Analyser
 			if (mouseUpPos.X > mouseDownPos.X)
 			{
 				selectStart = (int) mouseDownPos.X * DrawTools.Zoom ;
+				if (selectStart < 0)
+				{
+					selectStart = 0;
+				}
 				selectEnd = (int) mouseUpPos.X * DrawTools.Zoom ;
 			} else
 			{
 				selectStart = (int) mouseUpPos.X * DrawTools.Zoom;
+				if (selectStart < 0)
+				{
+					selectStart = 0;
+				}
 				selectEnd = (int) mouseDownPos.X * DrawTools.Zoom;
 			}
 		}
@@ -113,7 +137,7 @@ namespace Wave_Analyser
 		}
         public void DrawGraph()
         {
-            if (audio?.Samples == null)
+			if (audio?.Samples == null)
                 return;
 
             timeGraph.Children.Clear();
@@ -128,6 +152,12 @@ namespace Wave_Analyser
 		{
 			//draw the zero line
 			double y = timeGraph.ActualHeight / 2;
+			String channel = (isLeftChannel) ? "Left" : "Right";
+			if (audio.Channels == 1)
+			{
+				channel = "Mono";
+			}
+			DrawTools.Text(timeGraph, 5 + viewer.HorizontalOffset, 10, channel, Brushes.Red); 
 			DrawTools.DrawLine(timeGraph, viewer.HorizontalOffset, viewer.HorizontalOffset + viewer.ActualWidth, y, y, zeroLineBrush);
 			if (!isLeftChannel) { 
 				//draw the time axis
@@ -159,16 +189,40 @@ namespace Wave_Analyser
 					break; //stop drawing when out of view
 				}
 
-                double y1 = GetSampleY(samps[i]); //for test using left
+                double y1 = GetSampleY(samps[i]); 
 			    double y2 = GetSampleY(samps[i + spaces]);
                 DrawTools.DrawLine(timeGraph, xpos, (xpos + 1), y1, y2, waveformBrush);
 				xpos++;
             }			
         }
+		private void Copy(object sender, RoutedEventArgs e)
+		{
 
-        private double GetSampleY(double sample)
-        {   
+            audio.SetClipboard(SelectStart, SelectEnd);
+
+		}
+
+		private void Cut(object sender, RoutedEventArgs e)
+		{
+            audio.SetClipboard(SelectStart, SelectEnd);
+            audio.Cut(SelectStart);
+			DrawGraph();
+			otherChannel.DrawGraph();
+		}
+
+		private void Paste(object sender, RoutedEventArgs e)
+		{
+            audio.Paste((int)(mouseDownPos.X * DrawTools.Zoom));
+			DrawGraph();
+			otherChannel.DrawGraph();
+		}
+
+		private double GetSampleY(double sample)
+        {
+            
 			return ((sample - audio.MinAmp) / (audio.MaxAmp - audio.MinAmp)) * timeGraph.ActualHeight;
+			//return sample * timeGraph.ActualHeight;
+			//double SampleY = 20 * Math.Log10(sample) * timeGraph.ActualHeight / signal.MaxAmp;
         }
 
 		public void ScrollChanged(Object sender, ScrollChangedEventArgs e)
@@ -183,6 +237,10 @@ namespace Wave_Analyser
 		}
         public void MouseWheelZoom(Object sender, MouseWheelEventArgs e)
         {
+			if (audio == null)
+			{
+				return;
+			}
 			{
 				int zoomFactor = 2;
 
