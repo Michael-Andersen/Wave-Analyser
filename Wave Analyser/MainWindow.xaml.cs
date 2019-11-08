@@ -8,9 +8,6 @@ namespace Wave_Analyser
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-        private WaveformViewer waveformViewerL;
-		private WaveformViewer waveformViewerR;
-        private AudioFile audio;
 		private LibLink libLink;
 
 		public MainWindow()

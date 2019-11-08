@@ -10,7 +10,26 @@
              Background="Transparent">
     <Grid Background="{StaticResource freqBgBrush}">
         <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
-            <Canvas x:Name="freqGraph" ClipToBounds="True"/>
+            <Grid x:Name="theGrid"
+                    MouseDown="Grid_MouseDown"
+                    MouseUp="Grid_MouseUp"
+                    MouseMove="Grid_MouseMove"
+                    Background="Transparent" Margin="0,0,0,0"
+                >
+                <Canvas x:Name="freqGraph" ClipToBounds="True"/>
+                <Canvas>
+                    <Rectangle x:Name="selectionBox"
+                            Visibility="Collapsed"
+                            Stroke="Black"
+                            StrokeThickness="1"
+                        />
+                    <Rectangle x:Name="selectionBoxMirror"
+                            Visibility="Collapsed"
+                            Stroke="Black"
+                            StrokeThickness="1"
+                        />
+                </Canvas>
+            </Grid>
         </ScrollViewer>
     </Grid>
 </UserControl>

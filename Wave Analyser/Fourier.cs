@@ -14,7 +14,7 @@ namespace Wave_Analyser
 			for (int f = 0; f < N; f++)
 			{
 				results[f] = new Complex(0, 0);
-				for (int t = 0; t < s.Length; t++)
+				for (int t = 0; t < N; t++) //s.Length
 				{
 					results[f] += new Complex(s[t] * Math.Cos(t * 2 * Math.PI * (f) / N),
 						-1 * s[t] * Math.Sin(t * 2 * Math.PI * (f) / N));
@@ -39,11 +39,14 @@ namespace Wave_Analyser
 			float[] results = new float[N];
 			for (int t = 0; t < N; t++)
 			{
+				Complex c = new Complex(0, 0);
 				for (int f = 0; f < N; f++)
 				{
-					results[t] += (float)((amplitudes[f] * new Complex(Math.Cos(t * 2 * Math.PI * (f) / N), 0))
-						+ (amplitudes[f] * new Complex(0, Math.Sin(t * 2 * Math.PI * (f) / N)))).real;
+					
+					c += (amplitudes[f] * new Complex(Math.Cos(t * 2 * Math.PI * (f) / N), 0))
+						+ (amplitudes[f] * new Complex(0, Math.Sin(t * 2 * Math.PI * (f) / N)));
 				}
+				results[t] = (float)c.real;
 			}
 			return results;
 		}

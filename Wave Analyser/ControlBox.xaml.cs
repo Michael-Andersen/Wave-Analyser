@@ -181,12 +181,65 @@ namespace Wave_Analyser
 			userSampleRate = (int)slValue.Value;
 		}
 
+		public void Slider2ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+		{
+			if (freqDomain != null)
+			{
+				freqDomain.NumBins = (int)sl2Value.Value;
+			}
+		}
+
 		private void DftButton_Click(object sender, RoutedEventArgs e)
 		{
 			WaveformViewer useWV = (audio.LeftSelected) ? waveformViewerL : waveformViewerR;
             audio.SetSelection(useWV.SelectStart, useWV.SelectEnd, audio.LeftSelected);
 			freqDomain.GenerateFromFourier(audio.Selection);
 			freqDomain.DrawGraph();
+		}
+
+		private void filterCBtn_Click(object sender, RoutedEventArgs e)
+		{
+			Filter filter = new Filter(freqDomain.NumBins, freqDomain.SelectStart,
+				freqDomain.SelectEnd);
+			if (audio.Channels == 1)
+			{
+				audio.Samples = filter.Convolve(audio.Samples);
+				//audio.Samples = filter.getFilter();
+				audio.DeMux();
+			}
+			else
+			{
+				audio.Left = filter.Convolve(audio.Left);
+				audio.Right = filter.Convolve(audio.Right);
+				audio.Mux();
+			}
+			
+			waveformViewerL.DrawGraph();
+			waveformViewerR.DrawGraph();
+		}
+
+		private void filterBtn_Click(object sender, RoutedEventArgs e)
+		{
+			
+			Filter filter = new Filter(freqDomain.NumBins, freqDomain.SelectStart,
+				freqDomain.SelectEnd);
+			audio.Left = filter.filter(audio.Left);
+			audio.Right = filter.filter (audio.Right);
+			audio.Mux();
+			waveformViewerL.DrawGraph();
+			waveformViewerR.DrawGraph(); 
+
+		}
+
+		private void generateToneBtn_Click(object sender, RoutedEventArgs e)
+		{
+			double[] freqs = { 110, 220, 329.63 , 440, 554.37, 659.25, 783.99, 880 };
+			audio.GenerateStabData(freqs);
+			//double[] freqs = { 122, 3333 };
+			audio.GenerateSineData(freqs);
+			audio.DeMux();
+			waveformViewerL.DrawGraph();
+			waveformViewerR.DrawGraph();
 		}
 	}
 }

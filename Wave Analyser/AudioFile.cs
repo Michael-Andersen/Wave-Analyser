@@ -84,9 +84,9 @@ namespace Wave_Analyser.Classes
 		for (int i = 0; i < samples.Length; i++)
 			{
 				temp[i] = samples[i];
-				if (i > header.sampleRate / 2)
+				if (i > header.sampleRate / 4.0)
 				{
-					temp[i] += samples[i - header.sampleRate / 2] * (float)0.5 + temp[i - header.sampleRate / 2] *(float)0.125;
+					temp[i] += samples[i - (header.sampleRate / 4)] * (float)0.5 + temp[i - header.sampleRate / 4] *(float)0.125;
 				}
 			
 			}
@@ -97,8 +97,8 @@ namespace Wave_Analyser.Classes
 		public double MinAmp { get => minAmp; }
 		public bool Signed { get => header.signed; }
 		public float[] Samples { get => samples; set => samples = value; }
-		public float[] Left { get => left; }
-		public float[] Right { get => right; }
+		public float[] Left { get => left; set => left = value; }
+		public float[] Right { get => right; set => right = value; }
 		public float[] Selection { get => selection; }
 		public bool LeftSelected { get => leftSelected; set => leftSelected = value; }
 		public int Channels { get => header.channels; }
@@ -172,20 +172,53 @@ namespace Wave_Analyser.Classes
 		}
 
 
-		public void GenerateSineData(double seconds, int[] freqs)
+		public void GenerateSineData(double[] freqs)
 		{
-			samples = new float[(int)(SampleRate * seconds)];
-
+			samples = new float[(int)(samples.Length)];
 			for (int i = 0; i < samples.Length; i++)
 			{
-				double time = i / header.sampleRate;
+				double time = i / (double)header.sampleRate;
 				samples[i] = 0;
 				for (int j = 0; j < freqs.Length; j++)
 				{
-					double amp = (maxAmp) / freqs.Length * Math.Sin(2 * Math.PI * freqs[j] * time);
-					samples[i] += (int)amp;
+					float amp = (float)(maxAmp/(freqs.Length * 2) *Math.Sin(2 * Math.PI * freqs[j] * time));
+					samples[i] += (float)amp;
 				}
 			}
+
+		}
+
+		public void GenerateStabData(double[] freqs)
+		{
+			samples = new float[(int)(samples.Length)];
+			bool silence = true;
+			double decay = 1;
+			for (int i = 0; i < samples.Length; i++)
+			{
+				double time = i / (double)header.sampleRate;
+				samples[i] = 0;
+				if (i % (header.sampleRate/2.0) == 0)
+				{
+					silence = !silence;
+					decay = 1;
+				}
+				decay -= (1 / (header.sampleRate / 2.0));
+				if (silence)
+				{
+					continue;
+				}
+				for (int j = 0; j < freqs.Length; j++)
+				{
+					int k = j % freqs.Length;
+					if (decay == 0)
+					{
+						continue;
+					}
+					float amp = (float)(decay * maxAmp / (Math.Pow(2, j + 2)) * Math.Sin(2 * Math.PI * freqs[j] * time));
+					samples[i] += (float)amp;
+				}
+			}
+
 		}
 
 		public void GenerateRandomData(double seconds)

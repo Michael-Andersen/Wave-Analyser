@@ -64,6 +64,7 @@
     </Compile>
     <Compile Include="DrawTools.cs" />
     <Compile Include="Complex.cs" />
+    <Compile Include="Filter.cs" />
     <Compile Include="Fourier.cs" />
     <Compile Include="FrequencyViewer.xaml.cs">
       <DependentUpon>FrequencyViewer.xaml</DependentUpon>

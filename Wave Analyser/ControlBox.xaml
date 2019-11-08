@@ -20,6 +20,10 @@
             <TextBox Grid.Column="0" Text="{Binding ElementName=slValue, Path=Value, UpdateSourceTrigger=PropertyChanged}" x:Name="sampleRateInput"/>
             <Button x:Name="recordButton" Click="RecordButton_Click">Start Recording</Button>
             <Button x:Name="echoButton" Click="EchoButton_Click">Add Echo</Button>
+            <Label>DFT Size (# Bins)</Label>
+            <Slider IsSnapToTickEnabled="True"
+    TickFrequency="1" ValueChanged="Slider2ValueChanged" Name="sl2Value" Visibility="Collapsed" Maximum="99999" Width ="100" Minimum="1" Value="164" HorizontalAlignment="Left" Margin="444,58,0,0" VerticalAlignment="Top"/>
+            <TextBox Grid.Column="0" Text="{Binding ElementName=sl2Value, Path=Value, UpdateSourceTrigger=PropertyChanged}" x:Name="DFTInput"/>
             <Button x:Name="dftButton" Click="DftButton_Click">Apply DFT</Button>
         </StackPanel>
         <StackPanel Grid.ColumnSpan="1" Grid.Column="2">
@@ -29,6 +33,9 @@
                 <ComboBoxItem x:Name="bd8">8 bit</ComboBoxItem>
                 <ComboBoxItem x:Name="bd16">16 bit</ComboBoxItem>
             </ComboBox>
+            <Button x:Name="filterCBtn" Click="filterCBtn_Click">Convultion Filter</Button>
+            <Button x:Name="filterBtn" Click="filterBtn_Click">Filter</Button>
+            <Button x:Name="toneBtn" Click="generateToneBtn_Click">Generate Tones</Button>
         </StackPanel>
     </Grid>
 </UserControl>
