@@ -23,7 +23,7 @@ namespace Wave_Analyser
 		private int selectEnd;
 		bool mouseDown = false;
 		Point mouseDownPos;
-
+		private double scale;
 		private AudioFile audio;
         private double[] frequencies;
         private double width;
@@ -40,14 +40,15 @@ namespace Wave_Analyser
 			InitializeComponent();
 
             NumBins = N;
+			scale = 1.0 / N;
             maxFreq = 0;
-
+			NumThreads = 4;
             this.SizeChanged += FrequencyViewer_SizeChanged;
         }
 
         private void FrequencyViewer_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (audio == null)
+            if (frequencies == null)
                 return;
 
             DrawGraph();
@@ -55,7 +56,9 @@ namespace Wave_Analyser
 
         public AudioFile Audio { set => audio = value; }
 
+		public int NumThreads { get; set; }
         public int NumBins { get; set; }
+
 
 		public int SelectStart { get => selectStart; }
 		public int SelectEnd { get => selectEnd; }
@@ -66,7 +69,12 @@ namespace Wave_Analyser
             freqGraph.UpdateLayout();
 
             MeasureGraph();
-
+			scale = (NumBins >= N) ? 1.0 / N : 1.0 / NumBins;
+			double xGap = (scale * NumBins) * width / frequencies.Length;
+			//double xGap =  width / frequencies.Length;
+			double xGapA =  width / NUM_X;
+			//double xGapA = (scale * NumBins) * width / NUM_X;
+			freqGraph.Width = left + xGap * (frequencies.Length + 1) + xGapA;
             //draw axis
             DrawTools.DrawLine(freqGraph, left, left, top, bottom, freqChartBrush);
             DrawTools.DrawLine(freqGraph, left, right, bottom, bottom, freqChartBrush);
@@ -80,27 +88,29 @@ namespace Wave_Analyser
                 DrawTools.Text(freqGraph, 0, bottom - i * yGap, "" + Math.Round(amplitude, 3), freqChartBrush);
 			}
 
-            // draw bars
-            double xGap = width / frequencies.Length;
-           
+			// draw bars
+		    
+			//xGap = 50;
+
             for (int i = 0; i < frequencies.Length; i++)
 			{
-                DrawTools.DrawBar(freqGraph, left + i * xGap, bottom, BAR_WIDTH, frequencies[i] * (height / maxFreq), freqChartBrush);
+				DrawTools.DrawBar(freqGraph, left + i * xGap, bottom, BAR_WIDTH, frequencies[i] * (height / maxFreq), freqChartBrush);
             }
 
-            // draw x axis numbers
-            xGap = width / NUM_X;
+			// draw x axis numbers
 
-            for (int i = 0; i < NUM_X + 1; i++)
+			int numLabels = (int)(scale * NumBins * NUM_X);
+            for (int i = 0; i < numLabels + 1; i++)// NUM_X + 1
             {
-                int frequency = (i * audio.SampleRate / NUM_X);
-                DrawTools.Text(freqGraph, left + i * xGap, bottom, frequency + "", freqChartBrush);
+                int frequency = (i * audio.SampleRate / numLabels);  
+                DrawTools.Text(freqGraph, left + i * xGapA, bottom, frequency + "", freqChartBrush);
             }
 		}
 
 		public void GenerateFromFourier(float[] samples)
 		{
-			Complex[] fourierResults = Fourier.DFT(samples, NumBins);
+			//Complex[] fourierResults = Fourier.DFT(samples, NumBins);
+			Complex[] fourierResults = Fourier.DFT_Thread(samples, NumBins, NumThreads);
 			frequencies = new double[fourierResults.Length];
             maxFreq = 0;
 			for (int i = 0; i < frequencies.Length; i++)
@@ -147,7 +157,7 @@ namespace Wave_Analyser
 
 			Canvas.SetLeft(selectionBox, mouseDownPos.X);
 			Canvas.SetTop(selectionBox, mouseDownPos.Y);
-			Canvas.SetLeft(selectionBoxMirror, width - (mouseDownPos.X - left) + left);
+			Canvas.SetLeft(selectionBoxMirror, freqGraph.ActualWidth - (mouseDownPos.X - left) + left);
 			Canvas.SetTop(selectionBoxMirror, mouseDownPos.Y);
 			selectionBox.Width = 0;
 			selectionBox.Height = freqGraph.ActualHeight;
@@ -183,21 +193,21 @@ namespace Wave_Analyser
 			Point mouseUpPos = e.GetPosition(theGrid);
 			if (mouseUpPos.X > mouseDownPos.X)
 			{
-				selectStart = (int)((mouseDownPos.X-left) / (width / NumBins));
+				selectStart = (int)((mouseDownPos.X-left) / ((scale * NumBins) * width / NumBins));
 				if (selectStart < 0)
 				{
 					selectStart = 0;
 				}
-				selectEnd = (int)((mouseUpPos.X-left) / (width / NumBins));
+				selectEnd = (int)((mouseUpPos.X-left) / ((scale * NumBins) * width / NumBins));
 			}
 			else
 			{
-				selectStart = (int)((mouseUpPos.X -left) / (width / NumBins));
+				selectStart = (int)((mouseUpPos.X -left) / ((scale * NumBins) * width / NumBins));
 				if (selectStart < 0)
 				{
 					selectStart = 0;
 				}
-				selectEnd = (int)((mouseDownPos.X - left) / (width / NumBins));
+				selectEnd = (int)((mouseDownPos.X - left) / ((scale * NumBins) *width / NumBins));
 			}
 			int freqS = selectStart * audio.SampleRate / NumBins;
 			int freqE = selectEnd * audio.SampleRate / NumBins;
@@ -208,26 +218,25 @@ namespace Wave_Analyser
 			if (mouseDown)
 			{
 				Point mousePos = e.GetPosition(theGrid);
-				double test;
+				double mirrorPos;
 				if (mouseDownPos.X < mousePos.X)
 				{
 					Canvas.SetLeft(selectionBox, mouseDownPos.X);
-					test = width - (mousePos.X - left) + left;
+					mirrorPos = (scale * NumBins) * width - (mousePos.X - left) + left;
 					Canvas.SetLeft(selectionBoxMirror,
-						test);
+						mirrorPos);
 					selectionBox.Width = mousePos.X - mouseDownPos.X;
 					selectionBoxMirror.Width = mousePos.X - mouseDownPos.X;
 				}
 				else
 				{
 					Canvas.SetLeft(selectionBox, mousePos.X);
-					test = width - (mouseDownPos.X - left) + left;
+					mirrorPos = (scale * NumBins) * width - (mouseDownPos.X - left) + left;
 					Canvas.SetLeft(selectionBoxMirror,
-						test);
+						mirrorPos);
 					selectionBox.Width = mouseDownPos.X - mousePos.X;
 					selectionBoxMirror.Width = mouseDownPos.X - mousePos.X;
 				}
-				test += 0;
 				Canvas.SetTop(selectionBox, 0);
 				Canvas.SetTop(selectionBoxMirror, 0);
 

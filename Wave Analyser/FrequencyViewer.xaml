@@ -9,7 +9,7 @@
              Focusable="True"
              Background="Transparent">
     <Grid Background="{StaticResource freqBgBrush}">
-        <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Auto">
+        <ScrollViewer CanContentScroll="True" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Visible">
             <Grid x:Name="theGrid"
                     MouseDown="Grid_MouseDown"
                     MouseUp="Grid_MouseUp"
@@ -29,7 +29,7 @@
                             StrokeThickness="1"
                         />
                 </Canvas>
-            </Grid>
+                </Grid>
         </ScrollViewer>
     </Grid>
 </UserControl>

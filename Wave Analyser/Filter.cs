@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Wave_Analyser
@@ -10,9 +11,8 @@ namespace Wave_Analyser
 	{
 		private float[] timeDom;
 		private Complex[] freqDom;
-		private double[] test;
-		private double[] test2;
-		public Filter(int size, int passStart, int passEnd)
+
+		public Filter(int size, int passStart, int passEnd, int threads)
 		{
 			freqDom = new Complex[size];
 			int mirrorStart = size - passEnd;
@@ -29,23 +29,12 @@ namespace Wave_Analyser
 					freqDom[i] = new Complex(0, 0);
 				}
 			}
-			test = new double[size];
-			for (int i = 0; i < test.Length; i++)
-			{
-				test[i] = freqDom[i].real;
-			}
 			
-			timeDom = Fourier.IDFT(freqDom, freqDom.Length);
-			Complex[] testC = Fourier.DFT(timeDom, timeDom.Length);
-			test2 = new double[testC.Length];
-			for (int i = 0; i < test2.Length; i++)
-			{
-				test2[i] = testC[i].real;
-			}
-			for (int i = 0; i < timeDom.Length; i++)
+			timeDom = Fourier.IDFT_Thread(freqDom, freqDom.Length, threads, true);			
+			/*for (int i = 0; i < timeDom.Length; i++)
 			{
 				timeDom[i] /= timeDom.Length;
-			}
+			} */
 			
 		}
 
@@ -60,7 +49,43 @@ namespace Wave_Analyser
 					float oldSample = ((i + j) < samples.Length) ? samples[i + j] : 0;
 					sampleC += oldSample * timeDom[j];
 				}
-				results[i] = sampleC; // / timeDom.Length;
+				results[i] = sampleC; 
+			}
+			return results;
+		}
+
+		public void Convolve_ThreadH(float[] samples, float[] results, int start, int size)
+		{
+			for (int i = start; i < start + size; i++)
+			{
+				float sampleC = 0;
+				for (int j = 0; j < timeDom.Length; j++)
+				{
+					float oldSample = ((i + j) < samples.Length) ? samples[i + j] : 0;
+					sampleC += oldSample * timeDom[j];
+				}
+				results[i] = sampleC;
+			}
+		}
+
+		public float[] Convolve_Thread(float[] samples, int threads)
+		{
+			Thread[] threadArr = new Thread[threads];
+			int NperThread = samples.Length / threads;
+			float[] results = new float[samples.Length];
+			for (int i = 0; i < threads; i++)
+			{
+				int start = NperThread * i;
+				if (i == (threads - 1))
+				{
+					NperThread += (samples.Length - NperThread * threads);
+				}
+				threadArr[i] = new Thread(() => Convolve_ThreadH(samples, results, start, NperThread));
+				threadArr[i].Start();
+			}
+			for (int i = 0; i < threadArr.Length; i++)
+			{
+				threadArr[i].Join();
 			}
 			return results;
 		}

@@ -174,17 +174,18 @@ namespace Wave_Analyser.Classes
 
 		public void GenerateSineData(double[] freqs)
 		{
-			samples = new float[(int)(samples.Length)];
-			for (int i = 0; i < samples.Length; i++)
+			left = new float[(int)(left.Length)];
+			for (int i = 0; i < left.Length; i++)
 			{
 				double time = i / (double)header.sampleRate;
-				samples[i] = 0;
+				left[i] = 0;
 				for (int j = 0; j < freqs.Length; j++)
 				{
-					float amp = (float)(maxAmp/(freqs.Length * 2) *Math.Sin(2 * Math.PI * freqs[j] * time));
-					samples[i] += (float)amp;
+					float amp = (float)(maxAmp/(freqs.Length * 2) * Math.Sin(2 * Math.PI * freqs[j] * time));
+					left[i] += (float)amp;
 				}
 			}
+			right = left;
 
 		}
 

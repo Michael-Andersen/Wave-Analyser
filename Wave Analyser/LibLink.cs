@@ -43,8 +43,9 @@ namespace Wave_Analyser
 
 		private Boolean playing = false;
 		private Boolean recording = false;
+		private Boolean recordingDone = false;
 		private ControlBox controlBox;
-
+		
 
 		public LibLink(MainWindow mainWin, ControlBox cb)
 		{
@@ -81,6 +82,7 @@ namespace Wave_Analyser
 		public void recordStop()
 		{
 			RecordStop();
+			recordingDone = true;
 		}
 
 		public void playStart(byte[] samples, double sampleRate, int bitDepth, int channels, int dataLength)
