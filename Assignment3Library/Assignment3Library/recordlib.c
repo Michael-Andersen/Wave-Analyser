@@ -4,11 +4,11 @@
 #include "recordlib.h"
 
 static BOOL         bRecording, bPlaying, bReverse, bPaused,
-bEnding, bTerminating;
+bEnding, bTerminating, bLastPlay;
 static DWORD        dwDataLength, dwRepetitions = 1;
 static HWAVEIN      hWaveIn;
 static HWAVEOUT     hWaveOut;
-static PBYTE       pBuffer1, pBuffer2, pNewBuffer;
+static PBYTE       pBuffer1, pBuffer2, pNewBuffer, pOldBuffer;
 static PBYTE       pSaveBuffer;
 static PWAVEHDR     pWaveHdr1, pWaveHdr2;
 static TCHAR        szOpenError[] = TEXT("Error opening waveform audio!");
@@ -23,12 +23,20 @@ int WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, PVOID pvReserved)
 	return TRUE;
 }
 
+EXPORT VOID CALLBACK SetLastPlay(BOOLEAN isLastPlay) {
+	bLastPlay = TRUE;
+}
+
 EXPORT VOID CALLBACK SetHandle(HWND handle) {
 	hwnd = handle;
 }
 
 EXPORT void CALLBACK SetPSaveBuffer(PBYTE pSaveBuff) {
 	pSaveBuffer = pSaveBuff;
+}
+
+EXPORT void CALLBACK SetPNewBuffer(PBYTE pSaveBuff) {
+	pNewBuffer = pSaveBuff;
 }
 
 EXPORT DWORD CALLBACK GetDWDataLength() {
@@ -69,8 +77,26 @@ EXPORT VOID CALLBACK SetBitDepth(WORD depth) {
 	waveform.wBitsPerSample = depth;
 }
 
+EXPORT VOID CALLBACK PlayPart() {
+	pWaveHdr1->lpData = pSaveBuffer;
+	pWaveHdr1->dwBufferLength = dwDataLength;
+	pWaveHdr1->dwBytesRecorded = 0;
+	pWaveHdr1->dwUser = 0;
+	pWaveHdr1->dwFlags = WHDR_BEGINLOOP | WHDR_ENDLOOP;
+	pWaveHdr1->dwLoops = dwRepetitions;
+	pWaveHdr1->lpNext = NULL;
+	pWaveHdr1->reserved = 0;
 
+	// Prepare and write
+
+	waveOutPrepareHeader(hWaveOut, pWaveHdr1, sizeof(WAVEHDR));
+	waveOutWrite(hWaveOut, pWaveHdr1, sizeof(WAVEHDR));
+
+	bEnding = FALSE;
+	bPlaying = TRUE;
+}
 EXPORT BOOL CALLBACK PlayStart() {
+	bLastPlay = FALSE;
 	waveform.wFormatTag = WAVE_FORMAT_PCM;
 	//waveform.nChannels = 1;
 	//waveform.nSamplesPerSec = 11025;
@@ -212,7 +238,7 @@ EXPORT PBYTE CALLBACK Record_Proc(UINT message, WPARAM wParam, LPARAM lParam)
 
 		pNewBuffer = realloc(pSaveBuffer, dwDataLength +
 			((PWAVEHDR)lParam)->dwBytesRecorded);
-
+		
 		if (pNewBuffer == NULL)
 		{
 			waveInClose(hWaveIn);
@@ -231,14 +257,14 @@ EXPORT PBYTE CALLBACK Record_Proc(UINT message, WPARAM wParam, LPARAM lParam)
 		if (bEnding)
 		{
 			waveInClose(hWaveIn);
-			return NULL;
+			return pSaveBuffer;
 		}
 
 		// Send out a new buffer
 
 		waveInAddBuffer(hWaveIn, (PWAVEHDR)lParam, sizeof(WAVEHDR));
-		return NULL;
-
+		return pSaveBuffer;
+		
 	case MM_WIM_CLOSE:
 		// Free the buffer memory
 
@@ -258,21 +284,11 @@ EXPORT PBYTE CALLBACK Record_Proc(UINT message, WPARAM wParam, LPARAM lParam)
 		return pSaveBuffer;
 
 	case MM_WOM_OPEN:
-		// Enable and disable buttons
-
-		//EnableWindow(GetDlgItem(hwnd, IDC_RECORD_BEG), FALSE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_RECORD_END), FALSE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_PLAY_BEG), FALSE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_PLAY_PAUSE), TRUE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_PLAY_END), TRUE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_PLAY_REP), FALSE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_PLAY_REV), FALSE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_PLAY_SPEED), FALSE);
-		//SetFocus(GetDlgItem(hwnd, IDC_PLAY_END));
 
 		// Set up header
-
-		pWaveHdr1->lpData = pSaveBuffer;
+		pBuffer1 = pSaveBuffer;
+		pBuffer2 = pNewBuffer;
+		pWaveHdr1->lpData = pBuffer1;
 		pWaveHdr1->dwBufferLength = dwDataLength;
 		pWaveHdr1->dwBytesRecorded = 0;
 		pWaveHdr1->dwUser = 0;
@@ -281,19 +297,35 @@ EXPORT PBYTE CALLBACK Record_Proc(UINT message, WPARAM wParam, LPARAM lParam)
 		pWaveHdr1->lpNext = NULL;
 		pWaveHdr1->reserved = 0;
 
+		pWaveHdr2->lpData = pBuffer2;
+		pWaveHdr2->dwBufferLength = dwDataLength;
+		pWaveHdr2->dwBytesRecorded = 0;
+		pWaveHdr2->dwUser = 0;
+		pWaveHdr2->dwFlags = WHDR_BEGINLOOP | WHDR_ENDLOOP;
+		pWaveHdr2->dwLoops = dwRepetitions;
+		pWaveHdr2->lpNext = NULL;
+		pWaveHdr2->reserved = 0;
+
 		// Prepare and write
 
 		waveOutPrepareHeader(hWaveOut, pWaveHdr1, sizeof(WAVEHDR));
+		waveOutPrepareHeader(hWaveOut, pWaveHdr2, sizeof(WAVEHDR));
 		waveOutWrite(hWaveOut, pWaveHdr1, sizeof(WAVEHDR));
+		waveOutWrite(hWaveOut, pWaveHdr2, sizeof(WAVEHDR));
 
 		bEnding = FALSE;
 		bPlaying = TRUE;
 		return NULL;
 
 	case MM_WOM_DONE:
-		waveOutUnprepareHeader(hWaveOut, pWaveHdr1, sizeof(WAVEHDR));
-		waveOutClose(hWaveOut);
-		return NULL;
+		if (bLastPlay || bEnding) {
+			waveOutUnprepareHeader(hWaveOut, (LPWAVEHDR)lParam, sizeof(WAVEHDR));
+			waveOutClose(hWaveOut);
+			return NULL;
+		}
+		((LPWAVEHDR)lParam)->lpData = pSaveBuffer;
+		waveOutWrite(hWaveOut, ((LPWAVEHDR)lParam), sizeof(WAVEHDR));
+		return pSaveBuffer;
 
 	case MM_WOM_CLOSE:
 		// Enable and disable buttons

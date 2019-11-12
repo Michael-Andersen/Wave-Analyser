@@ -22,7 +22,7 @@ namespace Wave_Analyser
     public partial class WaveformViewer : UserControl
     {
         private static readonly int DEFAULT_ZOOM = 128;
-
+		private int scrollValue;
 		private AudioFile audio;
 		private WaveformViewer otherChannel;
 		private int selectStart;
@@ -42,6 +42,7 @@ namespace Wave_Analyser
 				viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden; 
 			}
             DrawTools.Zoom = DEFAULT_ZOOM;
+			scrollValue = 16;
             timeGraph.MouseWheel += MouseWheelZoom;
             viewer.ScrollChanged += ScrollChanged;
         }
@@ -145,18 +146,18 @@ namespace Wave_Analyser
 				
 			}
 		}
-        public void DrawGraph()
+        public Boolean DrawGraph()
         {
-			if (audio?.Samples == null)
-                return;
-
-            timeGraph.Children.Clear();
+			timeGraph.Children.Clear();
             timeGraph.UpdateLayout();
-            timeAxis.Children.Clear();
+			timeAxis.Children.Clear();
             timeAxis.UpdateLayout();
+			if (audio?.Samples == null)
+			{
+				return false;
+			}
 			DrawAxis();
-            DrawWaveform();
-			timeGraph.UpdateLayout();
+            return DrawWaveform();
         }
 
 		private void DrawAxis()
@@ -184,7 +185,7 @@ namespace Wave_Analyser
 		}
         }
 
-        public void DrawWaveform()
+        public Boolean DrawWaveform()
         {
 			float[] samps = (isLeftChannel) ? audio.Left : audio.Right;
             timeGraph.Width = (samps.Length / DrawTools.Zoom > viewer.ActualWidth) ? 
@@ -196,14 +197,15 @@ namespace Wave_Analyser
             {
 				if (xpos - viewer.HorizontalOffset >= viewer.ActualWidth)
 				{
-					break; //stop drawing when out of view
+					return true; //stop drawing when out of view
 				}
 
                 double y1 = GetSampleY(samps[i]); 
 			    double y2 = GetSampleY(samps[i + DrawTools.Zoom]);
                 DrawTools.DrawLine(timeGraph, xpos, (xpos + 1), y1, y2, waveformBrush);
 				xpos++;
-            }			
+            }
+			return false;
         }
 		private void Copy(object sender, RoutedEventArgs e)
 		{
@@ -239,6 +241,17 @@ namespace Wave_Analyser
 		{
 			DrawGraph();
 			otherChannel.Scroll(viewer.HorizontalOffset);
+		}
+
+		public void ScrollToNext(uint change)
+		{
+			//timeGraph.Width = (audio.Left.Length / DrawTools.Zoom > viewer.ActualWidth) ?
+			//	audio.Left.Length / (double)DrawTools.Zoom : viewer.ActualWidth;
+
+			Scroll(viewer.ScrollableWidth - 16);
+			//scrollValue = 32;
+			//Scroll(viewer.HorizontalOffset + (double)(change)/DrawTools.Zoom);
+			
 		}
 
 		public void Scroll(double scroll)

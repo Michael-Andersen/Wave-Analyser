@@ -19,6 +19,7 @@ namespace Wave_Analyser.Classes
 		private float[] right;
 		private float[] left;
 		private bool leftSelected;
+		private byte[] byteArr;
         private float[] clipboardL;
         private float[] clipboardR;
         private int clipStart;
@@ -77,6 +78,7 @@ namespace Wave_Analyser.Classes
 
         public int SampleRate { get => header.sampleRate; }
         public int NyquistLimit { get => nyquistLimit; }
+		public ref byte[] ByteArr { get => ref byteArr; }
 
 		public void makeEcho()
 		{
@@ -91,6 +93,7 @@ namespace Wave_Analyser.Classes
 			
 			}
 			samples = temp;
+			floatToBytes();
 		}
 		
 		public double MaxAmp { get => maxAmp; }
@@ -387,16 +390,16 @@ namespace Wave_Analyser.Classes
 				int bytesForSamp = header.bitDepth / 8;
 				header.bytes = samples.Length * bytesForSamp;
 				wr.Write(header.bytes);
-				byte[] byteArray = floatToBytes();
+				floatToBytes();
 				
-				for (int i = 0; i < byteArray.Length; i++)
+				for (int i = 0; i < byteArr.Length; i++)
 				{
-					wr.Write(byteArray[i]);
+					wr.Write(byteArr[i]);
 				}
 			}
 		}
 
-		public Byte[] floatToBytes()
+		public byte[] floatToBytes()
 		{
 			byte[] byteArray = new Byte[header.bytes];
 			switch (header.bitDepth)
@@ -423,6 +426,8 @@ namespace Wave_Analyser.Classes
 				default:
 					break;
 			}
+			
+			byteArr =  byteArray;
 			return byteArray;
 		}
 	}

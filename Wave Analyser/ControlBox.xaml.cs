@@ -25,9 +25,9 @@ namespace Wave_Analyser
 		private Boolean playing = false;
 		private Boolean paused = false;
 		private Boolean recording = false;
+		private Boolean drawMore = true;
 		private int userSampleRate = 44100;
 		private int userBitDepth = 16;
-
 		private WaveformViewer waveformViewerL;
 		private WaveformViewer waveformViewerR;
 		private FrequencyViewer freqDomain;
@@ -74,21 +74,34 @@ namespace Wave_Analyser
 				audio.DeMux();
 				waveformViewerL.DrawGraph();
 				waveformViewerR.DrawGraph();
+				//libLink.setSamples(audio.floatToBytes());
 			}
+		}
+
+		public byte[] getSamples()
+		{
+			return audio.floatToBytes();
 		}
 
 		private void RecordButton_Click(object sender, RoutedEventArgs e)
 		{
+			
 			if (playing || recording)
 			{
-				libLink.recordStop();
 				recordButton.Content = "Start Recording";
+				libLink.recordStop();
+				
 				return;
 			}
 			else
 			{
 				playing = false;
 				recording = true;
+				audio = null;
+				waveformViewerL.Audio = null;
+				waveformViewerR.Audio = null;
+				waveformViewerL.DrawGraph();
+				waveformViewerR.DrawGraph();
 				recordButton.Content = "Stop Recording";
 				libLink.recordStart(userSampleRate, userBitDepth);
 			}
@@ -118,16 +131,40 @@ namespace Wave_Analyser
 			}
 		}
 
-		public void FinishedRecording(byte[] samples, int channels, int bitDepth, int sampleRate)
+		public void FinishedRecording(byte[] samples, int channels, int bitDepth, int sampleRate, Boolean recordingDone, uint change)
 		{
+			//Boolean result = false;
+			if (recordingDone)
+			{
+				drawMore = true;
+			}
 			AudioFile recorded = new AudioFile(samples, channels, bitDepth, sampleRate);
 			waveformViewerL.Audio = recorded;
 			waveformViewerR.Audio = recorded;
-			waveformViewerL.DrawGraph();
-			waveformViewerR.DrawGraph();
 			audio = recorded;
 			freqDomain.Audio = recorded;
-			recording = false;
+			if (drawMore)
+			{
+				waveformViewerR.DrawGraph();
+				//waveformViewerL.DrawGraph();
+				if (waveformViewerL.DrawGraph())
+				{
+					//result = true;
+					drawMore = false;
+					
+						/*waveformViewerR.DrawGraph();
+						waveformViewerL.DrawGraph(); */
+				}
+			} else
+			{
+				waveformViewerL.ScrollToNext(change);
+				//waveformViewerR.ScrollToNext(change);
+			}
+			if (recordingDone) { 
+				recording = false;
+				drawMore = true;
+			}
+			//return result;
 		}
 
 		public void FinishedPlaying()
@@ -169,7 +206,8 @@ namespace Wave_Analyser
 			else
 			{
 				playing = true;
-				libLink.playStart(audio.floatToBytes(), audio.SampleRate,
+				audio.floatToBytes();
+				libLink.playStart(ref audio.ByteArr, audio.SampleRate,
                     audio.BitDepth, audio.Channels, audio.Bytes);
 				playButton.Content = "Pause";
 			}

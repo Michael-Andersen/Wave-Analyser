@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Interop;
 
 namespace Wave_Analyser
@@ -40,12 +41,24 @@ namespace Wave_Analyser
 		public static extern ushort GetBitDepth();
 		[DllImport("RecordingLibrary.dll")]
 		public static extern ushort SetHandle(IntPtr handle);
+		[DllImport("RecordingLibrary.dll")]
+		public static extern void SetLastPlay(Boolean isLastPlay);
+		[DllImport("RecordingLibrary.dll")]
+		public static extern void PlayPart();
+		[DllImport("RecordingLibrary.dll")]
+		public static extern void SetPNewBuffer(IntPtr pSaveBuff);
 
 		private Boolean playing = false;
 		private Boolean recording = false;
 		private Boolean recordingDone = false;
+		private Boolean isLastPlay = false;
+
+
+		private byte[] samples;
+		private int place = 0;
+		private int useLength = 0;
+		private uint oldSize = 0;
 		private ControlBox controlBox;
-		
 
 		public LibLink(MainWindow mainWin, ControlBox cb)
 		{
@@ -64,38 +77,91 @@ namespace Wave_Analyser
 			if (recording && psave != IntPtr.Zero)
 			{
 				uint size = GetDWDataLength();
-				byte[] samples = new byte[size];
-				recording = false;
-				Marshal.Copy(psave, samples, 0, (int)size);
-				controlBox.FinishedRecording(samples,
-					Convert.ToInt32(GetChannels()), Convert.ToInt32(GetBitDepth()), Convert.ToInt32(GetSampleRate()));
+				uint change = size - oldSize;
+				oldSize = size;
+				byte[] samplesN = new byte[size];
+				if (recordingDone)
+				{
+					recording = false;
+				}
+				Marshal.Copy(psave, samplesN, 0, (int)size);
+				controlBox.FinishedRecording(samplesN,
+					Convert.ToInt32(GetChannels()), Convert.ToInt32(GetBitDepth()), Convert.ToInt32(GetSampleRate()), recordingDone, change);	
 			}
 
 			if (playing && psave != IntPtr.Zero)
 			{
-				playing = false;
-				controlBox.FinishedPlaying();
+				if (isLastPlay)
+				{
+					playing = false;
+					controlBox.FinishedPlaying();
+				} else
+				{
+					if (place + useLength > samples.Length)
+					{
+						isLastPlay = true;
+						SetLastPlay(true);
+					}
+					samples = controlBox.getSamples();
+					int length = isLastPlay ? samples.Length - place : useLength;
+					SetDWDataLength(Convert.ToUInt32(length));
+					IntPtr psaveN = Marshal.AllocHGlobal(length);
+					Marshal.Copy(samples, place, psaveN, length);
+					SetPSaveBuffer(psaveN);
+					place += length;
+					//PlayPart();
+				}
 			}
 			return IntPtr.Zero;
 		}
 
-		public void recordStop()
-		{
-			RecordStop();
-			recordingDone = true;
+		public void setSamples(byte[] arr) {
+			samples = arr;
 		}
 
-		public void playStart(byte[] samples, double sampleRate, int bitDepth, int channels, int dataLength)
+		public void recordStop()
 		{
+			recordingDone = true;
+			RecordStop();
+			
+		}
+
+		public void playStart(ref byte[] samples, double sampleRate, int bitDepth, int channels, int dataLength)
+		{
+			isLastPlay = false;
+			place = 0;
+			this.samples = samples;
+			useLength = (int)sampleRate / 2;
+			if (place + useLength > samples.Length)
+			{
+				isLastPlay = true;
+				SetLastPlay(true);
+			}
+			int length = place + useLength > samples.Length ? samples.Length : useLength;
 			SetBitDepth(Convert.ToUInt16(bitDepth));
 			SetChannels(Convert.ToUInt16(channels));
-			SetDWDataLength(Convert.ToUInt32(dataLength));
+			SetDWDataLength(Convert.ToUInt32(length));
 			SetSampleRate(Convert.ToUInt32(sampleRate));
-			IntPtr psave = Marshal.AllocHGlobal(samples.Length);
-			Marshal.Copy(samples, 0, psave, samples.Length);
-			SetPSaveBuffer(psave);
-			playing = true;
-			PlayStart();
+			IntPtr psave1 = Marshal.AllocHGlobal(length);
+			Marshal.Copy(samples, place, psave1, length);
+			SetPSaveBuffer(psave1);
+			place += length;
+			if (!isLastPlay)
+			{
+				if (place + useLength > samples.Length)
+				{
+					isLastPlay = true;
+					SetLastPlay(true);
+				}
+				length = isLastPlay ? samples.Length - place : useLength;
+				SetDWDataLength(Convert.ToUInt32(length));
+				IntPtr psave2 = Marshal.AllocHGlobal(length);
+				Marshal.Copy(samples, place, psave2, length);
+				SetPNewBuffer(psave2);
+				place += length;
+				playing = true;
+				PlayStart();
+			}
 
 		}
 		public void playStop()
@@ -112,6 +178,7 @@ namespace Wave_Analyser
 		public void recordStart(int sampleRate, int bitDepth)
 		{
 			recording = true;
+			recordingDone = false;
 			Initialize();
 			SetBitDepth(Convert.ToUInt16(bitDepth));
 			SetChannels(Convert.ToUInt16(1));
