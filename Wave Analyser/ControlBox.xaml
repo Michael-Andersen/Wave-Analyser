@@ -25,6 +25,8 @@
     TickFrequency="1" ValueChanged="Slider2ValueChanged" Name="sl2Value" Visibility="Collapsed" Maximum="99999" Width ="100" Minimum="1" Value="164" HorizontalAlignment="Left" Margin="444,58,0,0" VerticalAlignment="Top"/>
             <TextBox Grid.Column="0" Text="{Binding ElementName=sl2Value, Path=Value, UpdateSourceTrigger=PropertyChanged}" x:Name="DFTInput"/>
             <Button x:Name="dftButton" Click="DftButton_Click">Apply DFT</Button>
+            <Label Content="Windowing"/>
+            <ComboBox x:Name="windowingSelect" SelectionChanged="WindowingSelect_SelectionChanged"/>
         </StackPanel>
         <StackPanel Grid.ColumnSpan="1" Grid.Column="2">
             <Button x:Name="stopBtn" Click="StopBtn_Click">Stop</Button>

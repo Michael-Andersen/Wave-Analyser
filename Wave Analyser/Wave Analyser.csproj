@@ -73,6 +73,8 @@
     <Compile Include="WaveformViewer.xaml.cs">
       <DependentUpon>WaveformViewer.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Windowing.cs" />
+    <Compile Include="WindowingMode.cs" />
     <Page Include="ControlBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -33,6 +33,7 @@ namespace Wave_Analyser
 		private FrequencyViewer freqDomain;
 		private AudioFile audio;
 		private LibLink libLink;
+        private WindowingMode windowingMode;
 
 		public LibLink LibLink { get => libLink; set => libLink = value; }
 
@@ -52,9 +53,17 @@ namespace Wave_Analyser
 			set => freqDomain = value;
 		}
 
+        public WindowingMode WindowingMode
+        {
+            get => windowingMode;
+            set => windowingMode = value;
+        }
+
 		public ControlBox()
         {
             InitializeComponent();
+
+            windowingMode = WindowingMode.None;
         }
 
 		private void EchoButton_Click(object sender, RoutedEventArgs e)
@@ -212,7 +221,8 @@ namespace Wave_Analyser
 				return;
 			}
 			audio.SetSelection(useWV.SelectStart, useWV.SelectEnd, audio.LeftSelected);
-			freqDomain.GenerateFromFourier(audio.Selection);
+            float[] selection = Windowing.Apply(audio.Selection, windowingMode);
+			freqDomain.GenerateFromFourier(selection);
 			freqDomain.DrawGraph();
 		}
 
@@ -269,5 +279,10 @@ namespace Wave_Analyser
 				waveformViewerR.DrawGraph();
 			}
 		}
-	}
+
+        private void WindowingSelect_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            WindowingMode = (WindowingMode)((sender as ComboBox).SelectedItem);
+        }
+    }
 }

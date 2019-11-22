@@ -25,6 +25,8 @@ namespace Wave_Analyser
 			controlBox.WaveformViewerL = waveformViewerL;
 			controlBox.WaveformViewerR = waveformViewerR;
 			controlBox.FrequencyViewer = freqDomain;
+            controlBox.windowingSelect.ItemsSource = System.Enum.GetValues(typeof(WindowingMode));
+            controlBox.windowingSelect.SelectedItem = controlBox.WindowingMode;
         }
 
 		private void OpenFile_Click(object sender, RoutedEventArgs e)
