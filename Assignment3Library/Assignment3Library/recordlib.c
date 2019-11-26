@@ -4,13 +4,15 @@
 #include "recordlib.h"
 
 static BOOL         bRecording, bPlaying, bReverse, bPaused,
-bEnding, bTerminating, bLastPlay;
+bEnding, bTerminating, bLastPlay, onLastBuff;
 static DWORD        dwDataLength, dwRepetitions = 1;
+static DWORD		dwLength2;
 static HWAVEIN      hWaveIn;
 static HWAVEOUT     hWaveOut;
 static PBYTE       pBuffer1, pBuffer2, pNewBuffer, pOldBuffer;
 static PBYTE       pSaveBuffer;
 static PWAVEHDR     pWaveHdr1, pWaveHdr2;
+static LPWAVEHDR   currHdr;
 static TCHAR        szOpenError[] = TEXT("Error opening waveform audio!");
 static TCHAR        szMemError[] = TEXT("Error allocating memory!");
 static WAVEFORMATEX waveform;
@@ -24,19 +26,27 @@ int WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, PVOID pvReserved)
 }
 
 EXPORT VOID CALLBACK SetLastPlay(BOOLEAN isLastPlay) {
-	bLastPlay = TRUE;
+	bLastPlay = isLastPlay;
 }
 
 EXPORT VOID CALLBACK SetHandle(HWND handle) {
 	hwnd = handle;
 }
 
+EXPORT VOID CALLBACK ContinuePlay(PBYTE buff, DWORD length) {
+	currHdr->lpData = buff;
+	currHdr->dwBufferLength = length;
+	waveOutPrepareHeader(hWaveOut, currHdr, sizeof(WAVEHDR));
+	waveOutWrite(hWaveOut, currHdr, sizeof(WAVEHDR));
+}
+
 EXPORT void CALLBACK SetPSaveBuffer(PBYTE pSaveBuff) {
 	pSaveBuffer = pSaveBuff;
 }
 
-EXPORT void CALLBACK SetPNewBuffer(PBYTE pSaveBuff) {
+EXPORT void CALLBACK SetPNewBuffer(PBYTE pSaveBuff, DWORD length) {
 	pNewBuffer = pSaveBuff;
+	dwLength2 = length;
 }
 
 EXPORT DWORD CALLBACK GetDWDataLength() {
@@ -96,7 +106,6 @@ EXPORT VOID CALLBACK PlayPart() {
 	bPlaying = TRUE;
 }
 EXPORT BOOL CALLBACK PlayStart() {
-	bLastPlay = FALSE;
 	waveform.wFormatTag = WAVE_FORMAT_PCM;
 	//waveform.nChannels = 1;
 	//waveform.nSamplesPerSec = 11025;
@@ -284,10 +293,10 @@ EXPORT PBYTE CALLBACK Record_Proc(UINT message, WPARAM wParam, LPARAM lParam)
 		return pSaveBuffer;
 
 	case MM_WOM_OPEN:
-
+		onLastBuff = FALSE;
 		// Set up header
 		pBuffer1 = pSaveBuffer;
-		pBuffer2 = pNewBuffer;
+		
 		pWaveHdr1->lpData = pBuffer1;
 		pWaveHdr1->dwBufferLength = dwDataLength;
 		pWaveHdr1->dwBytesRecorded = 0;
@@ -297,21 +306,29 @@ EXPORT PBYTE CALLBACK Record_Proc(UINT message, WPARAM wParam, LPARAM lParam)
 		pWaveHdr1->lpNext = NULL;
 		pWaveHdr1->reserved = 0;
 
-		pWaveHdr2->lpData = pBuffer2;
-		pWaveHdr2->dwBufferLength = dwDataLength;
-		pWaveHdr2->dwBytesRecorded = 0;
-		pWaveHdr2->dwUser = 0;
-		pWaveHdr2->dwFlags = WHDR_BEGINLOOP | WHDR_ENDLOOP;
-		pWaveHdr2->dwLoops = dwRepetitions;
-		pWaveHdr2->lpNext = NULL;
-		pWaveHdr2->reserved = 0;
-
+		if (pNewBuffer != NULL) {
+			pBuffer2 = pNewBuffer;
+			pWaveHdr2->lpData = pBuffer2;
+			pWaveHdr2->dwBufferLength = dwLength2;
+			pWaveHdr2->dwBytesRecorded = 0;
+			pWaveHdr2->dwUser = 0;
+			pWaveHdr2->dwFlags = WHDR_BEGINLOOP | WHDR_ENDLOOP;
+			pWaveHdr2->dwLoops = dwRepetitions;
+			pWaveHdr2->lpNext = NULL;
+			pWaveHdr2->reserved = 0;
+		}
+		else {
+			onLastBuff = TRUE;
+		}
 		// Prepare and write
-
 		waveOutPrepareHeader(hWaveOut, pWaveHdr1, sizeof(WAVEHDR));
-		waveOutPrepareHeader(hWaveOut, pWaveHdr2, sizeof(WAVEHDR));
+		if (pNewBuffer != NULL) {
+			waveOutPrepareHeader(hWaveOut, pWaveHdr2, sizeof(WAVEHDR));
+		}
 		waveOutWrite(hWaveOut, pWaveHdr1, sizeof(WAVEHDR));
-		waveOutWrite(hWaveOut, pWaveHdr2, sizeof(WAVEHDR));
+		if (pNewBuffer != NULL) {
+			waveOutWrite(hWaveOut, pWaveHdr2, sizeof(WAVEHDR));
+		}
 
 		bEnding = FALSE;
 		bPlaying = TRUE;
@@ -320,11 +337,16 @@ EXPORT PBYTE CALLBACK Record_Proc(UINT message, WPARAM wParam, LPARAM lParam)
 	case MM_WOM_DONE:
 		if (bLastPlay || bEnding) {
 			waveOutUnprepareHeader(hWaveOut, (LPWAVEHDR)lParam, sizeof(WAVEHDR));
-			waveOutClose(hWaveOut);
+			if (onLastBuff) {
+				waveOutClose(hWaveOut);
+			}
+			onLastBuff = TRUE;
 			return NULL;
 		}
-		((LPWAVEHDR)lParam)->lpData = pSaveBuffer;
-		waveOutWrite(hWaveOut, ((LPWAVEHDR)lParam), sizeof(WAVEHDR));
+		currHdr = (LPWAVEHDR)lParam;
+		 //= pSaveBuffer;
+		//waveOutWrite(hWaveOut, ((LPWAVEHDR)lParam), sizeof(WAVEHDR));
+		//return pSaveBuffer;
 		return pSaveBuffer;
 
 	case MM_WOM_CLOSE:
@@ -344,7 +366,8 @@ EXPORT PBYTE CALLBACK Record_Proc(UINT message, WPARAM wParam, LPARAM lParam)
 		bPaused = FALSE;
 		dwRepetitions = 1;
 		bPlaying = FALSE;
-
+		//free(pBuffer1);
+		//free(pBuffer2);
 		
 		if (bTerminating)
 			SendMessage(hwnd, WM_SYSCOMMAND, SC_CLOSE, 0L);

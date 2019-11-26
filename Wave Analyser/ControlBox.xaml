@@ -29,7 +29,7 @@
             <ComboBox x:Name="windowingSelect" SelectionChanged="WindowingSelect_SelectionChanged"/>
         </StackPanel>
         <StackPanel Grid.ColumnSpan="1" Grid.Column="2">
-            <Button x:Name="stopBtn" Click="StopBtn_Click">Stop</Button>
+            <Button x:Name="stopBtn" Click="StopBtn_Click" MouseDoubleClick="StopBtn_DoubleClick">Stop</Button>
             <Label>Bit Depth</Label>
             <ComboBox IsSynchronizedWithCurrentItem="True" SelectedIndex="1" x:Name="bitDepthComboBox" SelectionChanged="BitDepthComboBox_SelectionChanged">
                 <ComboBoxItem x:Name="bd8">8 bit</ComboBoxItem>
@@ -42,6 +42,10 @@
             <Slider IsSnapToTickEnabled="True"
     TickFrequency="1" ValueChanged="Slider3ValueChanged" Name="sl3Value" Visibility="Collapsed" Maximum="16" Width ="100" Minimum="1" Value="4" HorizontalAlignment="Left" Margin="444,58,0,0" VerticalAlignment="Top"/>
             <TextBox Grid.Column="0" Text="{Binding ElementName=sl3Value, Path=Value, UpdateSourceTrigger=PropertyChanged}" x:Name="ThreadInput"/>
+            <Label>Buffer Size (ms)</Label>
+            <Slider IsSnapToTickEnabled="True"
+    TickFrequency="1" ValueChanged="Slider4ValueChanged" Name="sl4Value" Visibility="Collapsed" Maximum="100000" Width ="100" Minimum="250" Value="500" HorizontalAlignment="Left" Margin="444,58,0,0" VerticalAlignment="Top"/>
+            <TextBox Grid.Column="0" Text="{Binding ElementName=sl4Value, Path=Value, UpdateSourceTrigger=PropertyChanged}" x:Name="BufferInput"/>
         </StackPanel>
     </Grid>
 </UserControl>

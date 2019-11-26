@@ -41,4 +41,5 @@ EXPORT WORD CALLBACK GetBitDepth();
 EXPORT DWORD CALLBACK GetSampleRate();
 EXPORT VOID CALLBACK SetHandle(HWND handle);
 EXPORT VOID CALLBACK PlayPart();
-EXPORT void CALLBACK SetPNewBuffer(PBYTE pSaveBuff);
+EXPORT void CALLBACK SetPNewBuffer(PBYTE pSaveBuff, DWORD length);
+EXPORT VOID CALLBACK ContinuePlay(PBYTE buff, DWORD length);

@@ -22,9 +22,10 @@ namespace Wave_Analyser
     public partial class WaveformViewer : UserControl
     {
         private static readonly int DEFAULT_ZOOM = 128;
-		private int scrollValue;
+		private double indexPoint;
 		private AudioFile audio;
 		private WaveformViewer otherChannel;
+		private Line indexLine;
 		private int selectStart;
 		private int selectEnd;
 		bool mouseDown = false;
@@ -42,7 +43,7 @@ namespace Wave_Analyser
 				viewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden; 
 			}
             DrawTools.Zoom = DEFAULT_ZOOM;
-			scrollValue = 16;
+			indexPoint = viewer.ActualWidth / 2 + viewer.HorizontalOffset;
             timeGraph.MouseWheel += MouseWheelZoom;
             viewer.ScrollChanged += ScrollChanged;
         }
@@ -50,6 +51,7 @@ namespace Wave_Analyser
         public AudioFile Audio { get => audio;  set { audio = value; ClearSelection(); } }
         public int SelectStart { get => selectStart; }
         public int SelectEnd { get => selectEnd; }
+		public double IndexPoint { set => indexPoint = value; }
 		public WaveformViewer OtherChannel { set => otherChannel = value; }
 
         private void Grid_MouseDown(object sender, MouseButtonEventArgs e)
@@ -65,12 +67,13 @@ namespace Wave_Analyser
 			}
 			mouseDown = true;
 			theGrid.CaptureMouse();
-
+			indexPoint = mouseDownPos.X;
+			DrawIndexLine();
 			Canvas.SetLeft(selectionBox, mouseDownPos.X);
 			Canvas.SetTop(selectionBox, mouseDownPos.Y);
 			selectionBox.Width = 0;
 			selectionBox.Height = timeGraph.ActualHeight;
-
+			
 			selectionBox.Visibility = Visibility.Visible;
 		}
 
@@ -157,8 +160,16 @@ namespace Wave_Analyser
 				return false;
 			}
 			DrawAxis();
+			DrawIndexLine();
             return DrawWaveform();
         }
+
+		public void DrawIndexLine()
+		{
+			timeGraph.Children.Remove(indexLine);
+			indexLine = DrawTools.DrawLine(timeGraph, indexPoint, 
+				indexPoint,  0, viewer.ActualHeight, Brushes.Green);
+		}
 
 		private void DrawAxis()
 		{
@@ -184,6 +195,7 @@ namespace Wave_Analyser
 				}
 		}
         }
+
 
         public Boolean DrawWaveform()
         {
@@ -243,12 +255,28 @@ namespace Wave_Analyser
 			otherChannel.Scroll(viewer.HorizontalOffset);
 		}
 
-		public void ScrollToNext(uint change)
+		public void ScrollForPlay(int place)
+		{
+			if ((double)(place) / DrawTools.Zoom - viewer.HorizontalOffset > viewer.ActualWidth)
+			{
+				Scroll((double)(place) /DrawTools.Zoom);
+				
+			}
+			//DrawGraph();
+		}
+
+		public void ScrollToNext(double change)
 		{
 			//timeGraph.Width = (audio.Left.Length / DrawTools.Zoom > viewer.ActualWidth) ?
 			//	audio.Left.Length / (double)DrawTools.Zoom : viewer.ActualWidth;
-
-			Scroll(viewer.ScrollableWidth - 16);
+			if (audio.Channels == 2)
+			{
+				change /= 2;
+			}
+			change /= (audio.BitDepth / 8);
+			change /= DrawTools.Zoom;
+			//Scroll(viewer.ScrollableWidth - 16);
+			Scroll(viewer.HorizontalOffset + change);
 			//scrollValue = 32;
 			//Scroll(viewer.HorizontalOffset + (double)(change)/DrawTools.Zoom);
 			

@@ -23,7 +23,7 @@ namespace Wave_Analyser
 			canvas.Children.Add(textBlock);
 		}
 
-		public static void DrawLine(Canvas canvas, double x1, double x2, double y1, double y2, Brush color, double thickness = 1)
+		public static Line DrawLine(Canvas canvas, double x1, double x2, double y1, double y2, Brush color, double thickness = 1)
 		{
 			Line line = new Line();
 			line.X1 = x1;
@@ -33,6 +33,7 @@ namespace Wave_Analyser
 			line.Stroke = color;
 			line.StrokeThickness = thickness;
 			canvas.Children.Add(line);
+			return line;
 		}
 
         public static void DrawBar(Canvas canvas, double left, double bottom, double width, double height, Brush color)

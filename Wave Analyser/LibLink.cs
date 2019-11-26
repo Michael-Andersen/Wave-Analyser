@@ -46,17 +46,20 @@ namespace Wave_Analyser
 		[DllImport("RecordingLibrary.dll")]
 		public static extern void PlayPart();
 		[DllImport("RecordingLibrary.dll")]
-		public static extern void SetPNewBuffer(IntPtr pSaveBuff);
+		public static extern void SetPNewBuffer(IntPtr pSaveBuff, uint length);
+		[DllImport("RecordingLibrary.dll")]
+		public static extern void ContinuePlay(IntPtr buff, uint length);
 
 		private Boolean playing = false;
 		private Boolean recording = false;
 		private Boolean recordingDone = false;
 		private Boolean isLastPlay = false;
 
+		private int bufferSize;
 
+		public int BufferSize{ get => bufferSize; set => bufferSize = value; }
 		private byte[] samples;
 		private int place = 0;
-		private int useLength = 0;
 		private uint oldSize = 0;
 		private ControlBox controlBox;
 
@@ -77,7 +80,7 @@ namespace Wave_Analyser
 			if (recording && psave != IntPtr.Zero)
 			{
 				uint size = GetDWDataLength();
-				uint change = size - oldSize;
+				double change = size - oldSize;
 				oldSize = size;
 				byte[] samplesN = new byte[size];
 				if (recordingDone)
@@ -85,7 +88,7 @@ namespace Wave_Analyser
 					recording = false;
 				}
 				Marshal.Copy(psave, samplesN, 0, (int)size);
-				controlBox.FinishedRecording(samplesN,
+				controlBox.UpdateRecordedData(samplesN,
 					Convert.ToInt32(GetChannels()), Convert.ToInt32(GetBitDepth()), Convert.ToInt32(GetSampleRate()), recordingDone, change);	
 			}
 
@@ -95,21 +98,28 @@ namespace Wave_Analyser
 				{
 					playing = false;
 					controlBox.FinishedPlaying();
+					controlBox.ScrollForPlay(place);
 				} else
 				{
-					if (place + useLength > samples.Length)
+					if (place + bufferSize >= samples.Length)
 					{
 						isLastPlay = true;
 						SetLastPlay(true);
 					}
-					samples = controlBox.getSamples();
-					int length = isLastPlay ? samples.Length - place : useLength;
-					SetDWDataLength(Convert.ToUInt32(length));
+					//samples = controlBox.getSamples();
+					int length = isLastPlay ? samples.Length - place : bufferSize;
+					//SetDWDataLength(Convert.ToUInt32(length));
 					IntPtr psaveN = Marshal.AllocHGlobal(length);
 					Marshal.Copy(samples, place, psaveN, length);
-					SetPSaveBuffer(psaveN);
-					place += length;
-					//PlayPart();
+					//SetPSaveBuffer(psaveN);
+					ContinuePlay(psaveN, Convert.ToUInt32(length));
+					//Thread scrollThread = new Thread(() => controlBox.ScrollForPlay(place));
+					controlBox.ScrollForPlay(place - length);
+					if (!isLastPlay)
+					{
+						place += length;
+					}
+					
 				}
 			}
 			return IntPtr.Zero;
@@ -126,18 +136,16 @@ namespace Wave_Analyser
 			
 		}
 
-		public void playStart(ref byte[] samples, double sampleRate, int bitDepth, int channels, int dataLength)
+		public void playStart(byte[] samples, double sampleRate, int bitDepth, int channels, int dataLength)
 		{
 			isLastPlay = false;
 			place = 0;
 			this.samples = samples;
-			useLength = (int)sampleRate / 2;
-			if (place + useLength > samples.Length)
+			if (place + bufferSize > samples.Length)
 			{
 				isLastPlay = true;
-				SetLastPlay(true);
 			}
-			int length = place + useLength > samples.Length ? samples.Length : useLength;
+			int length = place + bufferSize > samples.Length ? samples.Length : bufferSize;
 			SetBitDepth(Convert.ToUInt16(bitDepth));
 			SetChannels(Convert.ToUInt16(channels));
 			SetDWDataLength(Convert.ToUInt32(length));
@@ -146,22 +154,25 @@ namespace Wave_Analyser
 			Marshal.Copy(samples, place, psave1, length);
 			SetPSaveBuffer(psave1);
 			place += length;
+			playing = true;
 			if (!isLastPlay)
 			{
-				if (place + useLength > samples.Length)
+				if (place + bufferSize > samples.Length)
 				{
 					isLastPlay = true;
-					SetLastPlay(true);
+					
 				}
-				length = isLastPlay ? samples.Length - place : useLength;
-				SetDWDataLength(Convert.ToUInt32(length));
+				length = isLastPlay ? samples.Length - place : bufferSize;
 				IntPtr psave2 = Marshal.AllocHGlobal(length);
 				Marshal.Copy(samples, place, psave2, length);
-				SetPNewBuffer(psave2);
+				SetPNewBuffer(psave2, Convert.ToUInt32(length));
 				place += length;
-				playing = true;
-				PlayStart();
+			} else
+			{
+				SetPNewBuffer(IntPtr.Zero, 0);
 			}
+			SetLastPlay(isLastPlay);
+			PlayStart();
 
 		}
 		public void playStop()

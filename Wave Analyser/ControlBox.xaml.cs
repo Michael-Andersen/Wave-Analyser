@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -74,13 +75,13 @@ namespace Wave_Analyser
 				audio.DeMux();
 				waveformViewerL.DrawGraph();
 				waveformViewerR.DrawGraph();
-				//libLink.setSamples(audio.floatToBytes());
+				libLink.setSamples(audio.ByteArr);
 			}
 		}
 
 		public byte[] getSamples()
 		{
-			return audio.floatToBytes();
+			return audio.ByteArr;
 		}
 
 		private void RecordButton_Click(object sender, RoutedEventArgs e)
@@ -118,6 +119,8 @@ namespace Wave_Analyser
 				waveformViewerR.Audio = audio;
 				waveformViewerR.DrawGraph();
 				freqDomain.Audio = audio;
+				libLink.BufferSize = (int)(sl4Value.Value / 1000.0 * audio.SampleRate * audio.Channels
+					* audio.BitDepth / 8);
 			}
 		}
 
@@ -131,40 +134,32 @@ namespace Wave_Analyser
 			}
 		}
 
-		public void FinishedRecording(byte[] samples, int channels, int bitDepth, int sampleRate, Boolean recordingDone, uint change)
+		private void SetAudio(AudioFile af)
 		{
-			//Boolean result = false;
-			if (recordingDone)
-			{
-				drawMore = true;
-			}
-			AudioFile recorded = new AudioFile(samples, channels, bitDepth, sampleRate);
-			waveformViewerL.Audio = recorded;
-			waveformViewerR.Audio = recorded;
-			audio = recorded;
-			freqDomain.Audio = recorded;
+			audio = af;
+			waveformViewerL.Audio = af;
+			waveformViewerR.Audio = af;
+			freqDomain.Audio = af;
+		}
+
+		public void UpdateRecordedData(byte[] samples, int channels, int bitDepth, int sampleRate, Boolean recordingDone, double change)
+		{
+			drawMore = (recordingDone) ? recordingDone : drawMore;
+			SetAudio( new AudioFile(samples, channels, bitDepth, sampleRate));
 			if (drawMore)
 			{
 				waveformViewerR.DrawGraph();
-				//waveformViewerL.DrawGraph();
-				if (waveformViewerL.DrawGraph())
-				{
-					//result = true;
-					drawMore = false;
-					
-						/*waveformViewerR.DrawGraph();
-						waveformViewerL.DrawGraph(); */
-				}
+				drawMore = !waveformViewerL.DrawGraph();
 			} else
 			{
 				waveformViewerL.ScrollToNext(change);
-				//waveformViewerR.ScrollToNext(change);
 			}
 			if (recordingDone) { 
 				recording = false;
 				drawMore = true;
+				libLink.BufferSize = (int)(sl4Value.Value / 1000.0 * audio.SampleRate * audio.Channels
+					* audio.BitDepth / 8);
 			}
-			//return result;
 		}
 
 		public void FinishedPlaying()
@@ -181,6 +176,21 @@ namespace Wave_Analyser
 				playing = false;
 				playButton.Content = "Play";
 			}
+		}
+		private void StopBtn_DoubleClick(object sender, MouseButtonEventArgs e)
+		{
+			if (audio == null || recording)
+			{
+				return;
+			}
+			WaveformViewerL.IndexPoint = 0;
+			WaveformViewerR.IndexPoint = 0;
+			waveformViewerL.Scroll(0);
+			waveformViewerR.Scroll(0);
+			waveformViewerL.DrawIndexLine();
+			waveformViewerR.DrawIndexLine();
+			
+
 		}
 		private void PlayButton_Click(object sender, RoutedEventArgs e)
 		{
@@ -201,16 +211,24 @@ namespace Wave_Analyser
 					paused = false;
 				}
 				libLink.playPause();
-
 			}
 			else
 			{
-				playing = true;
-				audio.floatToBytes();
-				libLink.playStart(ref audio.ByteArr, audio.SampleRate,
-                    audio.BitDepth, audio.Channels, audio.Bytes);
-				playButton.Content = "Pause";
+				StartPlaying();
 			}
+		}
+
+		private void StartPlaying()
+		{
+			playing = true;
+			audio.floatToBytes();
+			waveformViewerL.IndexPoint = 0;
+			waveformViewerR.IndexPoint = 0;
+			waveformViewerL.DrawIndexLine();
+			waveformViewerL.DrawIndexLine();
+			libLink.playStart(audio.ByteArr, audio.SampleRate,
+			   audio.BitDepth, audio.Channels, audio.Bytes);
+			playButton.Content = "Pause";
 		}
 
 
@@ -244,6 +262,14 @@ namespace Wave_Analyser
 			if (freqDomain != null)
 			{
 				freqDomain.NumThreads = (int)sl3Value.Value;
+			}
+		}
+
+		public void Slider4ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+		{
+			if (audio != null) {
+				libLink.BufferSize = (int)(sl4Value.Value / 1000.0 * audio.SampleRate * audio.Channels
+					* audio.BitDepth / 8);
 			}
 		}
 
@@ -286,6 +312,21 @@ namespace Wave_Analyser
 			
 			waveformViewerL.DrawGraph();
 			waveformViewerR.DrawGraph();
+			libLink.setSamples(audio.floatToBytes());
+		}
+
+		public void ScrollForPlay(int place)
+		{
+			if (audio.Channels == 2)
+			{
+				place /= 2;
+			}
+			place /= (audio.BitDepth / 8);
+			waveformViewerL.IndexPoint = (double)(place) / DrawTools.Zoom;
+			waveformViewerR.IndexPoint = (double)(place) / DrawTools.Zoom;
+			waveformViewerL.ScrollForPlay(place);
+			waveformViewerL.DrawGraph();
+			waveformViewerR.DrawGraph();
 		}
 
 		private void filterBtn_Click(object sender, RoutedEventArgs e)
@@ -308,10 +349,10 @@ namespace Wave_Analyser
 		{
 			if (audio != null)
 			{
-				//double[] freqs = { 110, 220, 329.63 , 440, 554.37, 659.25, 783.99, 880 };
-				//audio.GenerateStabData(freqs);
-				double[] freqs = { 2756 };
-				audio.GenerateSineData(freqs);
+				double[] freqs = { 110, 220, 329.63 , 440, 554.37, 659.25, 783.99, 880 };
+				audio.GenerateStabData(freqs);
+				//double[] freqs = { 2756 };
+				//audio.GenerateSineData(freqs);
 				audio.Mux();
 				waveformViewerL.DrawGraph();
 				waveformViewerR.DrawGraph();
