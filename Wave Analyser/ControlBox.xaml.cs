@@ -353,7 +353,7 @@ namespace Wave_Analyser
 				audio.GenerateStabData(freqs);
 				//double[] freqs = { 2756 };
 				//audio.GenerateSineData(freqs);
-				audio.Mux();
+				audio.DeMux();
 				waveformViewerL.DrawGraph();
 				waveformViewerR.DrawGraph();
 			}

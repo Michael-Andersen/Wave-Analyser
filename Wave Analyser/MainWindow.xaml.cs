@@ -9,6 +9,7 @@ namespace Wave_Analyser
 	public partial class MainWindow : Window
 	{
 		private LibLink libLink;
+		private MainWindow otherWindow;
 
 		public MainWindow()
 		{
@@ -38,5 +39,7 @@ namespace Wave_Analyser
 		{
 			controlBox.SaveFile();
 		}
+
+		
 	}
 }

@@ -119,7 +119,6 @@ namespace Wave_Analyser
 					{
 						place += length;
 					}
-					
 				}
 			}
 			return IntPtr.Zero;
@@ -173,6 +172,7 @@ namespace Wave_Analyser
 			}
 			SetLastPlay(isLastPlay);
 			PlayStart();
+			controlBox.ScrollForPlay(place - length);
 
 		}
 		public void playStop()

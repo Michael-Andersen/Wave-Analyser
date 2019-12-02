@@ -166,9 +166,18 @@ namespace Wave_Analyser
 
 		public void DrawIndexLine()
 		{
+
+			UpdateIndexLine();
+			otherChannel.UpdateIndexLine();
+		}
+
+		public void UpdateIndexLine()
+		{
+
 			timeGraph.Children.Remove(indexLine);
-			indexLine = DrawTools.DrawLine(timeGraph, indexPoint, 
-				indexPoint,  0, viewer.ActualHeight, Brushes.Green);
+			indexLine = DrawTools.DrawLine(timeGraph, indexPoint,
+				indexPoint, 0, viewer.ActualHeight, Brushes.Green);
+			otherChannel.IndexPoint = indexPoint;
 		}
 
 		private void DrawAxis()
