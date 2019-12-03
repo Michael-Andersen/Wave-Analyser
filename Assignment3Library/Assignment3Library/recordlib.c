@@ -16,7 +16,7 @@ static LPWAVEHDR   currHdr;
 static TCHAR        szOpenError[] = TEXT("Error opening waveform audio!");
 static TCHAR        szMemError[] = TEXT("Error allocating memory!");
 static WAVEFORMATEX waveform;
-static HWND hwnd;
+//static HWND hwnd;
 
 TCHAR szAppName[] = TEXT("Record1");
 
@@ -29,9 +29,9 @@ EXPORT VOID CALLBACK SetLastPlay(BOOLEAN isLastPlay) {
 	bLastPlay = isLastPlay;
 }
 
-EXPORT VOID CALLBACK SetHandle(HWND handle) {
-	hwnd = handle;
-}
+//EXPORT VOID CALLBACK SetHandle(HWND handle) {
+	//hwnd = handle;
+//}
 
 EXPORT VOID CALLBACK ContinuePlay(PBYTE buff, DWORD length) {
 	currHdr->lpData = buff;
@@ -105,7 +105,7 @@ EXPORT VOID CALLBACK PlayPart() {
 	bEnding = FALSE;
 	bPlaying = TRUE;
 }
-EXPORT BOOL CALLBACK PlayStart() {
+EXPORT BOOL CALLBACK PlayStart(HWND hwnd) {
 	waveform.wFormatTag = WAVE_FORMAT_PCM;
 	//waveform.nChannels = 1;
 	//waveform.nSamplesPerSec = 11025;
@@ -140,7 +140,7 @@ EXPORT void CALLBACK Initialize() {
 	pSaveBuffer = malloc(1);
 }
 
-EXPORT BOOL CALLBACK RecordStart() {
+EXPORT BOOL CALLBACK RecordStart(HWND hwnd) {
 
 	pBuffer1 = malloc(INP_BUFFER_SIZE);
 	pBuffer2 = malloc(INP_BUFFER_SIZE);
@@ -201,17 +201,17 @@ EXPORT BOOL CALLBACK RecordStart() {
 	return TRUE;
 }
 
-EXPORT BOOL CALLBACK PlayPause() {
+EXPORT BOOL CALLBACK PlayPause(HWND hwnd) {
 	if (!bPaused)
 	{
 		waveOutPause(hWaveOut);
-		SetDlgItemText(hwnd, IDC_PLAY_PAUSE, TEXT("Resume"));
+		//SetDlgItemText(hwnd, IDC_PLAY_PAUSE, TEXT("Resume"));
 		bPaused = TRUE;
 	}
 	else
 	{
 		waveOutRestart(hWaveOut);
-		SetDlgItemText(hwnd, IDC_PLAY_PAUSE, TEXT("Pause"));
+		//SetDlgItemText(hwnd, IDC_PLAY_PAUSE, TEXT("Pause"));
 		bPaused = FALSE;
 	}
 	return TRUE;
@@ -219,7 +219,7 @@ EXPORT BOOL CALLBACK PlayPause() {
 
 
 
-EXPORT PBYTE CALLBACK Record_Proc(UINT message, WPARAM wParam, LPARAM lParam)
+EXPORT PBYTE CALLBACK Record_Proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Windows;
 using System.Windows.Interop;
 
 namespace Wave_Analyser
@@ -10,21 +11,21 @@ namespace Wave_Analyser
 		[DllImport("RecordingLibrary.dll")]
 		public static extern void Initialize();
 		[DllImport("RecordingLibrary.dll")]
-		public static extern void RecordStart();
+		public static extern void RecordStart(IntPtr hwnd);
 		[DllImport("RecordingLibrary.dll")]
 		public static extern void RecordStop();
 		[DllImport("RecordingLibrary.dll")]
-		public static extern void PlayStart();
+		public static extern void PlayStart(IntPtr hwnd);
 		[DllImport("RecordingLibrary.dll")]
 		public static extern void PlayStop();
 		[DllImport("RecordingLibrary.dll")]
-		public static extern IntPtr Record_Proc(int message, IntPtr wParam, IntPtr lParam);
+		public static extern IntPtr Record_Proc(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam);
 		[DllImport("RecordingLibrary.dll")]
 		public static extern void SetPSaveBuffer(IntPtr pSaveBuff);
 		[DllImport("RecordingLibrary.dll")]
 		public static extern uint GetDWDataLength();
 		[DllImport("RecordingLibrary.dll")]
-		public static extern void PlayPause();
+		public static extern void PlayPause(IntPtr hwnd);
 		[DllImport("RecordingLibrary.dll")]
 		public static extern void SetDWDataLength(uint dwdata);
 		[DllImport("RecordingLibrary.dll")]
@@ -39,8 +40,8 @@ namespace Wave_Analyser
 		public static extern uint GetSampleRate();
 		[DllImport("RecordingLibrary.dll")]
 		public static extern ushort GetBitDepth();
-		[DllImport("RecordingLibrary.dll")]
-		public static extern ushort SetHandle(IntPtr handle);
+		//[DllImport("RecordingLibrary.dll")]
+		//public static extern ushort SetHandle(IntPtr handle);
 		[DllImport("RecordingLibrary.dll")]
 		public static extern void SetLastPlay(Boolean isLastPlay);
 		[DllImport("RecordingLibrary.dll")]
@@ -54,7 +55,7 @@ namespace Wave_Analyser
 		private Boolean recording = false;
 		private Boolean recordingDone = false;
 		private Boolean isLastPlay = false;
-
+		private IntPtr hwnd;
 		private int bufferSize;
 
 		public int BufferSize{ get => bufferSize; set => bufferSize = value; }
@@ -63,12 +64,12 @@ namespace Wave_Analyser
 		private uint oldSize = 0;
 		private ControlBox controlBox;
 
-		public LibLink(MainWindow mainWin, ControlBox cb)
+		public LibLink(Window mainWin, ControlBox cb)
 		{
 			controlBox = cb;
-			IntPtr hwnd = new WindowInteropHelper(mainWin).EnsureHandle();
+			hwnd = new WindowInteropHelper(mainWin).EnsureHandle();
 			HwndSource source = HwndSource.FromHwnd(hwnd);
-			SetHandle(hwnd);
+			//SetHandle(hwnd);
 			source.AddHook(new HwndSourceHook(WndProc));
 			Initialize();
 		}
@@ -76,7 +77,7 @@ namespace Wave_Analyser
 		//Used so C# knows when lib has finished recording or playing
 		IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
 		{
-			IntPtr psave = Record_Proc(msg, wParam, lParam);
+			IntPtr psave = Record_Proc(hwnd, msg, wParam, lParam);
 			if (recording && psave != IntPtr.Zero)
 			{
 				uint size = GetDWDataLength();
@@ -171,7 +172,7 @@ namespace Wave_Analyser
 				SetPNewBuffer(IntPtr.Zero, 0);
 			}
 			SetLastPlay(isLastPlay);
-			PlayStart();
+			PlayStart(hwnd);
 			controlBox.ScrollForPlay(place - length);
 
 		}
@@ -183,7 +184,7 @@ namespace Wave_Analyser
 
 		public void playPause()
 		{
-			PlayPause();
+			PlayPause(hwnd);
 		}
 
 		public void recordStart(int sampleRate, int bitDepth)
@@ -194,7 +195,7 @@ namespace Wave_Analyser
 			SetBitDepth(Convert.ToUInt16(bitDepth));
 			SetChannels(Convert.ToUInt16(1));
 			SetSampleRate(Convert.ToUInt32(sampleRate));
-			RecordStart();
+			RecordStart(hwnd);
 		}
 
 	}

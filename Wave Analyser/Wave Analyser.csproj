@@ -73,6 +73,9 @@
     <Compile Include="WaveformViewer.xaml.cs">
       <DependentUpon>WaveformViewer.xaml</DependentUpon>
     </Compile>
+    <Compile Include="WaveWindow.xaml.cs">
+      <DependentUpon>WaveWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Windowing.cs" />
     <Compile Include="WindowingMode.cs" />
     <Page Include="ControlBox.xaml">
@@ -96,6 +99,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="WaveformViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WaveWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

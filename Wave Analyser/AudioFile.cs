@@ -20,10 +20,11 @@ namespace Wave_Analyser.Classes
 		private float[] left;
 		private bool leftSelected;
 		private byte[] byteArr;
-        private float[] clipboardL;
-        private float[] clipboardR;
-        private int clipStart;
-        private int clipEnd;
+        private static float[] clipboardL;
+        private static float[] clipboardR;
+        private static int clipStart;
+        private static int clipEnd;
+		private static AudioFileHeader clipHeader;
 
         private AudioFile(AudioFileHeader header)
         {
@@ -132,10 +133,57 @@ namespace Wave_Analyser.Classes
 			}
 			clipStart = start;
 			clipEnd = end;
+			clipHeader = header;
 		}
 
 		public void Paste(int start)
 		{
+			if (clipHeader.sampleRate != header.sampleRate)
+			{
+				if (clipHeader.sampleRate < header.sampleRate)
+				{
+					int rate = header.sampleRate / clipHeader.sampleRate;
+					float[] tempL = new float[clipboardL.Length * rate];
+					float[] tempR = new float[clipboardR.Length * rate];
+					int k = 0;
+					for (int i = 0; i < clipboardL.Length; i++)
+					{
+						for (int j = 0; j < rate; j++)
+						{
+							tempL[k] = clipboardL[i];
+							tempR[k] = clipboardR[i];
+							k++;
+						}
+					}
+					clipboardL = tempL;
+					clipboardR = tempR;
+					int cutoffBin = clipHeader.sampleRate * 128 / header.sampleRate;
+					Filter filter = new Filter(128, 0, cutoffBin, 4);
+					clipboardL = filter.Convolve_Thread(tempL, 4);
+					clipboardR = filter.Convolve_Thread(tempR, 4);
+					clipHeader.sampleRate = header.sampleRate;
+				} else
+				{
+					int cutoffBin = header.sampleRate * 128 / clipHeader.sampleRate;
+					Filter filter = new Filter(128, 0, cutoffBin, 4);
+					clipboardL = filter.Convolve_Thread(clipboardL, 4);
+					clipboardR = filter.Convolve_Thread(clipboardR, 4);
+					int rate = clipHeader.sampleRate / header.sampleRate;
+					float[] tempL = new float[clipboardL.Length / rate];
+					float[] tempR = new float[clipboardR.Length / rate];
+					int k = 0;
+					for (int i = 0; i <tempL.Length; i++)
+					{
+						tempL[i] = clipboardL[k];
+						tempR[i] = clipboardR[k];
+						k += rate;
+					}
+					clipboardL = tempL;
+					clipboardR = tempR;
+					
+					clipHeader.sampleRate = header.sampleRate;
+				}
+			}
 			int newEnd = clipboardL.Length + left.Length;
 			float[] temp = new float[left.Length];
 			Array.Copy(left, temp, left.Length);
@@ -172,6 +220,7 @@ namespace Wave_Analyser.Classes
 			int bytesForSamp = header.bitDepth / 8;
 			header.bytes = samples.Length * bytesForSamp;
 			header.fileSize = header.bytes + 36;
+			clipHeader = header;
 		}
 
 

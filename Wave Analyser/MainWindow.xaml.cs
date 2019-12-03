@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Collections.Generic;
+using System.Windows;
 using Wave_Analyser.Classes;
 
 namespace Wave_Analyser
@@ -8,38 +9,34 @@ namespace Wave_Analyser
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-		private LibLink libLink;
-		private MainWindow otherWindow;
+		private List<WaveWindow> waves;
 
 		public MainWindow()
 		{
 			InitializeComponent();
+			WaveWindow ww = new WaveWindow(this);
+			this.Hide();
+			waves = new List<WaveWindow>();
+			ww.Show();
+			waves.Add(ww);
 			
-			libLink = new LibLink(this, controlBox);
-			controlBox.LibLink = libLink;
-			WaveformViewer waveformViewerL = new WaveformViewer(true);
-			WaveformViewer waveformViewerR = new WaveformViewer(false);
-			waveformViewerL.OtherChannel = waveformViewerR;
-			waveformViewerR.OtherChannel = waveformViewerL;
-			waveformPanel.Children.Add(waveformViewerL);
-			waveformPanel2.Children.Add(waveformViewerR);
-			controlBox.WaveformViewerL = waveformViewerL;
-			controlBox.WaveformViewerR = waveformViewerR;
-			controlBox.FrequencyViewer = freqDomain;
-            controlBox.windowingSelect.ItemsSource = System.Enum.GetValues(typeof(WindowingMode));
-            controlBox.windowingSelect.SelectedItem = controlBox.WindowingMode;
-        }
-
-		private void OpenFile_Click(object sender, RoutedEventArgs e)
-		{
-			controlBox.OpenFile();
 		}
 
-		private void SaveFile_Click(object sender, RoutedEventArgs e)
+		public void addWaveWindow()
 		{
-			controlBox.SaveFile();
+			WaveWindow ww = new WaveWindow(this);
+			waves = new List<WaveWindow>();
+			ww.Show();
+			waves.Add(ww);
 		}
 
-		
+		public void removeWaveWindow(WaveWindow ww)
+		{
+			waves.Remove(ww);
+			if (waves.Count == 0)
+			{
+				this.Close();
+			}
+		}
 	}
 }
