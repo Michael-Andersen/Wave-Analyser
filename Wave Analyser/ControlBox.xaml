@@ -35,8 +35,8 @@
                 <ComboBoxItem x:Name="bd8">8 bit</ComboBoxItem>
                 <ComboBoxItem x:Name="bd16">16 bit</ComboBoxItem>
             </ComboBox>
-            <Button x:Name="filterCBtn" Click="filterCBtn_Click">Convultion Filter</Button>
-            <Button x:Name="filterBtn" Click="filterBtn_Click">Filter</Button>
+            <Button x:Name="filterCBtn" Click="filterCBtn_Click">Filter</Button>
+            <Button x:Name="benchmarkBtn" Click="benchmarkBtn_Click">Benchmark</Button>
             <Button x:Name="toneBtn" Click="generateToneBtn_Click">Generate Tones</Button>
             <Label># of Threads </Label>
             <Slider IsSnapToTickEnabled="True"

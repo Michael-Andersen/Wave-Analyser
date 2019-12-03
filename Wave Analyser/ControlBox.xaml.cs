@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -292,27 +293,32 @@ namespace Wave_Analyser
 
 		private void filterCBtn_Click(object sender, RoutedEventArgs e)
 		{
+
+			filter(freqDomain.NumThreads);
+			waveformViewerL.DrawGraph();
+			waveformViewerR.DrawGraph();
+			libLink.setSamples(audio.floatToBytes());
+		}
+
+		private void filter(int threads)
+		{
 			if (audio == null)
 			{
 				return;
 			}
 			Filter filter = new Filter(freqDomain.NumBins, freqDomain.SelectStart,
-				freqDomain.SelectEnd, freqDomain.NumThreads);
+				freqDomain.SelectEnd, threads);
 			if (audio.Channels == 1)
 			{
-				audio.Samples = filter.Convolve_Thread(audio.Samples, freqDomain.NumThreads);
+				audio.Samples = filter.Convolve_Thread(audio.Samples, threads);
 				audio.DeMux();
 			}
 			else
 			{
-				audio.Left = filter.Convolve_Thread(audio.Left, freqDomain.NumThreads);
-				audio.Right = filter.Convolve_Thread(audio.Right, freqDomain.NumThreads);
+				audio.Left = filter.Convolve_Thread(audio.Left, threads);
+				audio.Right = filter.Convolve_Thread(audio.Right, threads);
 				audio.Mux();
 			}
-			
-			waveformViewerL.DrawGraph();
-			waveformViewerR.DrawGraph();
-			libLink.setSamples(audio.floatToBytes());
 		}
 
 		public void ScrollForPlay(int place)
@@ -329,6 +335,28 @@ namespace Wave_Analyser
 			waveformViewerR.DrawGraph();
 		}
 
+		private void benchmarkBtn_Click(object sender, RoutedEventArgs e)
+		{
+			Stopwatch sw = new Stopwatch();
+
+			sw.Start();
+			filter(1);
+			sw.Stop();
+			var time1 = sw.Elapsed;
+			sw.Restart();
+			filter(freqDomain.NumThreads);
+			sw.Stop();
+			var time2 = sw.Elapsed;
+			waveformViewerL.DrawGraph();
+			waveformViewerR.DrawGraph();
+			libLink.setSamples(audio.floatToBytes());
+			double ratio = (double)time1.Ticks / (double)time2.Ticks;
+			string info = "Ratio of 1 Thread Filter elasped time over " + freqDomain.NumThreads
+				+ " Thread Filter: " + ratio;
+			MessageBox.Show(info, "Benchmark");
+
+		}
+			//Deprecated
 		private void filterBtn_Click(object sender, RoutedEventArgs e)
 		{
 			if (audio == null)

@@ -95,6 +95,7 @@ namespace Wave_Analyser
 			return timeDom;
 		}
 
+		//deprecated
 		public float[] filter(float[] samples) {
 			
 			for (int i = 0; i < samples.Length; i+=freqDom.Length)
