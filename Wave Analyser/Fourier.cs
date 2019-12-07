@@ -17,13 +17,12 @@ namespace Wave_Analyser
 				results[f] = new Complex(0, 0);
 				for (int t = 0; t < N; t++) 
 				{
-                    try
-                    {
-                        results[f] += new Complex(s[t] * Math.Cos(t * 2 * Math.PI * (f) / N),
-                            -1 * s[t] * Math.Sin(t * 2 * Math.PI * (f) / N));
-                    }
-                    catch (IndexOutOfRangeException e){ 
-                    }
+                    
+                    
+                    results[f] += new Complex(s[t] * Math.Cos(t * 2 * Math.PI * (f) / N),
+                        -1 * s[t] * Math.Sin(t * 2 * Math.PI * (f) / N));
+                    
+                    
 				}
 				results[f] /= new Complex(N, 0);
 			}
