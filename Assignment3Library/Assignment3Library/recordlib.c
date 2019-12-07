@@ -33,6 +33,67 @@ EXPORT VOID CALLBACK SetLastPlay(BOOLEAN isLastPlay) {
 	//hwnd = handle;
 //}
 
+EXPORT float* CALLBACK convolveSSE(float* samples, DWORD slength, float* filter, DWORD fsize, WORD depth, float* results) {
+	LONG64 g = 0x00000000FFFFFFFF;
+	int z = fsize *sizeof(filter[0]);
+	int q = slength * sizeof(samples[0]);
+	_asm {
+		push eax
+		push ebx
+		push edx
+		push ecx
+		push esi
+		push edi
+		push ebp
+		movss xmm5, g
+		mov ebx, samples
+		xor ecx, ecx
+		mov eax, q
+		mov esi, filter
+		mov edx, z
+		mov ebp, results
+		START : cmp ecx, eax
+				jge DONE
+				xor edi, edi
+				xorps xmm3, xmm3
+				INNERA : cmp edi, edx
+						 jge INNERDONEA
+						 movups xmm1, [ebx + edi]
+						 movups xmm2, [esi + edi]
+						 mulps xmm1, xmm2
+						 addps xmm3, xmm1
+						 add edi, 16
+						 jmp INNERA
+						 INNERDONEA : movaps xmm2, xmm3
+									  psrldq xmm2, 4
+									  movaps xmm1, xmm2
+									  psrldq xmm1, 4
+									  movaps xmm4, xmm1
+									  psrldq xmm4, 4
+									  pand xmm4, xmm5
+									  andps xmm1, xmm5
+									  andps xmm2, xmm5
+									  andps xmm3, xmm5
+									  addps xmm3, xmm1
+									  addps xmm3, xmm2
+									  addps xmm3, xmm4
+									  movss[ebp], xmm3
+									  add ecx, 4
+									  add ebx, 4
+									  add ebp, 4
+									  jmp START
+									  DONE : pop ebp
+											 pop edi
+											 pop esi
+											 pop ecx
+											 pop edx
+											 pop ebx
+											 pop eax
+
+	}
+	return results;
+}
+
 EXPORT VOID CALLBACK ContinuePlay(PBYTE buff, DWORD length) {
 	currHdr->lpData = buff;
 	currHdr->dwBufferLength = length;
@@ -350,24 +411,12 @@ EXPORT PBYTE CALLBACK Record_Proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 		return pSaveBuffer;
 
 	case MM_WOM_CLOSE:
-		// Enable and disable buttons
-
-		//EnableWindow(GetDlgItem(hwnd, IDC_RECORD_BEG), TRUE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_RECORD_END), TRUE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_PLAY_BEG), TRUE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_PLAY_PAUSE), FALSE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_PLAY_END), FALSE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_PLAY_REV), TRUE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_PLAY_REP), TRUE);
-		//EnableWindow(GetDlgItem(hwnd, IDC_PLAY_SPEED), TRUE);
 		SetFocus(GetDlgItem(hwnd, IDC_PLAY_BEG));
 
 		SetDlgItemText(hwnd, IDC_PLAY_PAUSE, TEXT("Pause"));
 		bPaused = FALSE;
 		dwRepetitions = 1;
 		bPlaying = FALSE;
-		//free(pBuffer1);
-		//free(pBuffer2);
 		
 		if (bTerminating)
 			SendMessage(hwnd, WM_SYSCOMMAND, SC_CLOSE, 0L);

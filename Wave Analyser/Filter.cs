@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,8 +10,15 @@ namespace Wave_Analyser
 {
 	class Filter
 	{
+		[DllImport("RecordingLibrary.dll")]
+		public static extern IntPtr convolveSSE(IntPtr samples, uint slength, 
+			IntPtr filter, uint fsize, ushort depth, IntPtr results);
+
+		private float[] results;
 		private float[] timeDom;
 		private Complex[] freqDom;
+
+		public float[] TimeDom { get => timeDom; }
 
 		public Filter(int size, int passStart, int passEnd, int threads)
 		{
@@ -29,13 +37,24 @@ namespace Wave_Analyser
 					freqDom[i] = new Complex(0, 0);
 				}
 			}
-			
 			timeDom = Fourier.IDFT_Thread(freqDom, freqDom.Length, threads, true);			
-			/*for (int i = 0; i < timeDom.Length; i++)
-			{
-				timeDom[i] /= timeDom.Length;
-			} */
-			
+		}
+
+		public float[] ConvolveDLL(float[] samples, int length, int bitDepth)
+		{
+			IntPtr floatIn = Marshal.AllocHGlobal(Marshal.SizeOf(samples[0])*samples.Length);
+			Marshal.Copy(samples, 0, floatIn, samples.Length);
+			IntPtr filterIn = Marshal.AllocHGlobal(Marshal.SizeOf(timeDom[0])*timeDom.Length);
+			Marshal.Copy(timeDom, 0, filterIn, timeDom.Length);
+			results = new float[length];
+			IntPtr resultsIn = Marshal.AllocHGlobal(Marshal.SizeOf(results[0])*length);
+			Marshal.Copy(results, 0, resultsIn, length);
+			IntPtr pfloat = convolveSSE(floatIn, Convert.ToUInt32(length), filterIn, Convert.ToUInt32(timeDom.Length), Convert.ToUInt16(bitDepth), resultsIn);
+			Marshal.FreeHGlobal(filterIn);
+			Marshal.FreeHGlobal(floatIn);
+			Marshal.Copy(pfloat, results, 0, length);
+			Marshal.FreeHGlobal(resultsIn);
+			return results;
 		}
 
 		public float[] Convolve(float[] samples)
@@ -90,12 +109,7 @@ namespace Wave_Analyser
 			return results;
 		}
 
-		public float[] getFilter()
-		{
-			return timeDom;
-		}
-
-		//deprecated
+		//deprecated for filtering in freq domain without convolution
 		public float[] filter(float[] samples) {
 			
 			for (int i = 0; i < samples.Length; i+=freqDom.Length)

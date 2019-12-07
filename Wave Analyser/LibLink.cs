@@ -6,6 +6,7 @@ using System.Windows.Interop;
 
 namespace Wave_Analyser
 {
+	//Controls passing recording and playing data to C library code
     public class LibLink
     {
 		[DllImport("RecordingLibrary.dll")]
@@ -40,8 +41,6 @@ namespace Wave_Analyser
 		public static extern uint GetSampleRate();
 		[DllImport("RecordingLibrary.dll")]
 		public static extern ushort GetBitDepth();
-		//[DllImport("RecordingLibrary.dll")]
-		//public static extern ushort SetHandle(IntPtr handle);
 		[DllImport("RecordingLibrary.dll")]
 		public static extern void SetLastPlay(Boolean isLastPlay);
 		[DllImport("RecordingLibrary.dll")]
@@ -107,14 +106,10 @@ namespace Wave_Analyser
 						isLastPlay = true;
 						SetLastPlay(true);
 					}
-					//samples = controlBox.getSamples();
 					int length = isLastPlay ? samples.Length - place : bufferSize;
-					//SetDWDataLength(Convert.ToUInt32(length));
 					IntPtr psaveN = Marshal.AllocHGlobal(length);
 					Marshal.Copy(samples, place, psaveN, length);
-					//SetPSaveBuffer(psaveN);
 					ContinuePlay(psaveN, Convert.ToUInt32(length));
-					//Thread scrollThread = new Thread(() => controlBox.ScrollForPlay(place));
 					controlBox.ScrollForPlay(place - length);
 					if (!isLastPlay)
 					{

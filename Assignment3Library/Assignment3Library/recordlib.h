@@ -39,7 +39,7 @@ EXPORT VOID CALLBACK SetBitDepth(WORD depth);
 EXPORT WORD CALLBACK GetChannels();
 EXPORT WORD CALLBACK GetBitDepth();
 EXPORT DWORD CALLBACK GetSampleRate();
-//EXPORT VOID CALLBACK SetHandle(HWND handle);
+EXPORT float* CALLBACK convolveSSE(float* samples, DWORD slength, float* filter, DWORD fsize, WORD depth, float* results);
 EXPORT VOID CALLBACK PlayPart();
 EXPORT void CALLBACK SetPNewBuffer(PBYTE pSaveBuff, DWORD length);
 EXPORT VOID CALLBACK ContinuePlay(PBYTE buff, DWORD length);

@@ -22,7 +22,7 @@
             <Button x:Name="echoButton" Click="EchoButton_Click">Add Echo</Button>
             <Label>DFT Size (# Bins)</Label>
             <Slider IsSnapToTickEnabled="True"
-    TickFrequency="1" ValueChanged="Slider2ValueChanged" Name="sl2Value" Visibility="Collapsed" Maximum="99999" Width ="100" Minimum="1" Value="164" HorizontalAlignment="Left" Margin="444,58,0,0" VerticalAlignment="Top"/>
+    TickFrequency="1" ValueChanged="Slider2ValueChanged" Name="sl2Value" Visibility="Collapsed" Maximum="99999" Width ="100" Minimum="1" Value="256" HorizontalAlignment="Left" Margin="444,58,0,0" VerticalAlignment="Top"/>
             <TextBox Grid.Column="0" Text="{Binding ElementName=sl2Value, Path=Value, UpdateSourceTrigger=PropertyChanged}" x:Name="DFTInput"/>
             <Button x:Name="dftButton" Click="DftButton_Click">Apply DFT</Button>
             <Label Content="Windowing"/>
@@ -38,6 +38,7 @@
             <Button x:Name="filterCBtn" Click="filterCBtn_Click">Filter</Button>
             <Button x:Name="benchmarkBtn" Click="benchmarkBtn_Click">Benchmark</Button>
             <Button x:Name="toneBtn" Click="generateToneBtn_Click">Generate Tones</Button>
+            <Button x:Name="filterMMXBtn" Click="filterSSEBtn_Click">SSE Filter</Button>
             <Label># of Threads </Label>
             <Slider IsSnapToTickEnabled="True"
     TickFrequency="1" ValueChanged="Slider3ValueChanged" Name="sl3Value" Visibility="Collapsed" Maximum="16" Width ="100" Minimum="1" Value="4" HorizontalAlignment="Left" Margin="444,58,0,0" VerticalAlignment="Top"/>

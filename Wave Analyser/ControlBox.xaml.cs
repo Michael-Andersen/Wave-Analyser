@@ -293,11 +293,22 @@ namespace Wave_Analyser
 
 		private void filterCBtn_Click(object sender, RoutedEventArgs e)
 		{
-
 			filter(freqDomain.NumThreads);
 			waveformViewerL.DrawGraph();
 			waveformViewerR.DrawGraph();
 			libLink.setSamples(audio.floatToBytes());
+		}
+
+		private void filterSSEBtn_Click(object sender, RoutedEventArgs e)
+		{
+			if (audio == null)
+			{
+				return;
+			}
+			filterSSE();
+			libLink.setSamples(audio.floatToBytes());
+			waveformViewerL.DrawGraph();
+			waveformViewerR.DrawGraph();
 		}
 
 		private void filter(int threads)
@@ -307,7 +318,7 @@ namespace Wave_Analyser
 				return;
 			}
 			Filter filter = new Filter(freqDomain.NumBins, freqDomain.SelectStart,
-				freqDomain.SelectEnd, threads);
+				freqDomain.SelectEnd, threads);	
 			if (audio.Channels == 1)
 			{
 				audio.Samples = filter.Convolve_Thread(audio.Samples, threads);
@@ -317,6 +328,38 @@ namespace Wave_Analyser
 			{
 				audio.Left = filter.Convolve_Thread(audio.Left, threads);
 				audio.Right = filter.Convolve_Thread(audio.Right, threads);
+				audio.Mux();
+			}
+		}
+
+		private void filterSSE()
+		{
+			Filter filterOb = new Filter(freqDomain.NumBins, freqDomain.SelectStart,
+					freqDomain.SelectEnd, freqDomain.NumThreads);
+			if (audio.Channels == 1)
+			{
+				float[] floatForFilter = new float[audio.Samples.Length + freqDomain.NumBins - 1];
+				for (int i = 0; i < audio.Samples.Length; i++)
+				{
+					floatForFilter[i] = audio.Samples[i];
+				}
+				audio.Samples = filterOb.ConvolveDLL(floatForFilter, audio.Samples.Length, audio.BitDepth);
+				audio.DeMux();
+			}
+			else
+			{
+				float[] floatForFilterL = new float[audio.Left.Length + freqDomain.NumBins - 1];
+				for (int i = 0; i < audio.Left.Length; i++)
+				{
+					floatForFilterL[i] = audio.Left[i];
+				}
+				audio.Left = filterOb.ConvolveDLL(floatForFilterL, audio.Left.Length, audio.BitDepth);
+				float[] floatForFilterR = new float[audio.Right.Length + freqDomain.NumBins - 1];
+				for (int i = 0; i < audio.Right.Length; i++)
+				{
+					floatForFilterR[i] = audio.Right[i];
+				}
+				audio.Right = filterOb.ConvolveDLL(floatForFilterR, audio.Right.Length, audio.BitDepth);
 				audio.Mux();
 			}
 		}
@@ -347,29 +390,23 @@ namespace Wave_Analyser
 			filter(freqDomain.NumThreads);
 			sw.Stop();
 			var time2 = sw.Elapsed;
-			waveformViewerL.DrawGraph();
-			waveformViewerR.DrawGraph();
+			sw.Restart();
+			filterSSE();
+			sw.Stop();
+			var time3 = sw.Elapsed;
 			libLink.setSamples(audio.floatToBytes());
 			double ratio = (double)time1.Ticks / (double)time2.Ticks;
-			string info = "Ratio of 1 Thread Filter elasped time over " + freqDomain.NumThreads
+			double ratio2 = (double)time1.Ticks / (double)time3.Ticks;
+			double ratio3 = (double)time2.Ticks / (double)time3.Ticks;
+			string info = "Ratio of 1 Thread Filter elapsed time over " + freqDomain.NumThreads
 				+ " Thread Filter: " + ratio;
 			MessageBox.Show(info, "Benchmark");
-
-		}
-			//Deprecated
-		private void filterBtn_Click(object sender, RoutedEventArgs e)
-		{
-			if (audio == null)
-			{
-				return;
-			}
-			Filter filter = new Filter(freqDomain.NumBins, freqDomain.SelectStart,
-				freqDomain.SelectEnd, freqDomain.NumThreads);
-			audio.Left = filter.filter(audio.Left);
-			audio.Right = filter.filter (audio.Right);
-			audio.Mux();
-			waveformViewerL.DrawGraph();
-			waveformViewerR.DrawGraph(); 
+			string info2 = "Ratio of 1 Thread Filter elapsed time over " 
+				+ " SSE filter: " + ratio2;
+			string info3 = "Ratio of " + freqDomain.NumThreads
+				+ " Threaded Filter over SSE filter: " + ratio3;
+			MessageBox.Show(info2, "Benchmark");
+			MessageBox.Show(info3, "Benchmark");
 
 		}
 
@@ -379,8 +416,6 @@ namespace Wave_Analyser
 			{
 				double[] freqs = { 110, 220, 329.63 , 440, 554.37, 659.25, 783.99, 880 };
 				audio.GenerateStabData(freqs);
-				//double[] freqs = { 2756 };
-				//audio.GenerateSineData(freqs);
 				audio.DeMux();
 				waveformViewerL.DrawGraph();
 				waveformViewerR.DrawGraph();

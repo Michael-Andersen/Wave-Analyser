@@ -15,7 +15,7 @@ namespace Wave_Analyser
 			for (int f = 0; f < N; f++)
 			{
 				results[f] = new Complex(0, 0);
-				for (int t = 0; t < N; t++) //s.Length
+				for (int t = 0; t < N; t++) 
 				{
                     try
                     {

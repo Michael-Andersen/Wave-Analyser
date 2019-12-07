@@ -55,27 +55,32 @@ namespace Wave_Analyser.Classes
             header.fileSize = header.bytes + 36;
             int bytesForSamp = bitDepth / 8;
             int samps = header.bytes / bytesForSamp;
-            switch (bitDepth)
-            {
-                case 16:
-                    header.signed = true;
-                    Int16[] asInt16 = new Int16[samps];
-                    Buffer.BlockCopy(byteArray, 0, asInt16, 0, header.bytes);
-                    samples = Array.ConvertAll(asInt16, e => (e < 0) ?
-                        -1 * e / (float)Int16.MinValue : e / (float)Int16.MaxValue);
-                    break;
-                case 8:
-                    header.signed = false;
-                    samples = Array.ConvertAll(byteArray, e => ((e + SByte.MinValue) < 0) ?
-                    -1 * (e + SByte.MinValue) / (float)SByte.MinValue :
-                    (e + SByte.MinValue) / (float)SByte.MaxValue);
-                    break;
-                default:
-                    break;
-            }
-
+			this.byteArr = byteArray;
+			byteToFloat();
             DeMux();
         }
+
+		public void byteToFloat()
+		{
+			switch (header.bitDepth)
+			{
+				case 16:
+					header.signed = true;
+					Int16[] asInt16 = new Int16[header.bytes * 8 / header.bitDepth];
+					Buffer.BlockCopy(byteArr, 0, asInt16, 0, header.bytes);
+					samples = Array.ConvertAll(asInt16, e => (e < 0) ?
+						-1 * e / (float)Int16.MinValue : e / (float)Int16.MaxValue);
+					break;
+				case 8:
+					header.signed = false;
+					samples = Array.ConvertAll(byteArr, e => ((e + SByte.MinValue) < 0) ?
+					-1 * (e + SByte.MinValue) / (float)SByte.MinValue :
+					(e + SByte.MinValue) / (float)SByte.MaxValue);
+					break;
+				default:
+					break;
+			}
+		}
 
         public int SampleRate { get => header.sampleRate; }
         public int NyquistLimit { get => nyquistLimit; }
@@ -309,35 +314,20 @@ namespace Wave_Analyser.Classes
 
 					if (header.fmtSize == 18)
 					{
-						// Read any extra values
 						header.fmtExtraSize = reader.ReadInt16();
 						reader.ReadBytes(header.fmtExtraSize);
 					}
 
-					// chunk 2
 					header.dataID = reader.ReadInt32();
 					header.bytes = reader.ReadInt32();
 
-					// DATA!
 					byte[] byteArray = reader.ReadBytes(header.bytes);
-
 					int bytesForSamp = header.bitDepth / 8;
 					int samps = header.bytes / bytesForSamp;
 					float[] asFloat = null;
 
 					switch (header.bitDepth)
 					{
-						case 64:
-							header.signed = true;
-							double[] asDouble = new double[samps];
-							Buffer.BlockCopy(byteArray, 0, asDouble, 0, header.bytes);
-							asFloat = Array.ConvertAll(asDouble, e => (float)e);
-							break;
-						case 32:
-                            header.signed = true;
-							asFloat = new float[samps];
-							Buffer.BlockCopy(byteArray, 0, asFloat, 0, header.bytes);
-							break;
 						case 16:
                             header.signed = true;
 							Int16[] asInt16 = new Int16[samps];
@@ -357,6 +347,7 @@ namespace Wave_Analyser.Classes
 
                     audio = new AudioFile(header);
 					audio.Samples = asFloat;
+					audio.byteArr = byteArray;
 					audio.DeMux();
 				}
 			}
@@ -453,12 +444,6 @@ namespace Wave_Analyser.Classes
 			byte[] byteArray = new Byte[header.bytes];
 			switch (header.bitDepth)
 			{
-				case 64:
-					Buffer.BlockCopy(samples, 0, byteArray, 0, header.bytes);
-					break;
-				case 32:
-					Buffer.BlockCopy(samples, 0, byteArray, 0, header.bytes);
-					break;
 				case 16:
 					Int16[] asInt16 = new Int16[samples.Length];
 					asInt16 = Array.ConvertAll(samples, e => (e < 0) ?
